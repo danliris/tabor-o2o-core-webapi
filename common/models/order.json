@@ -1,0 +1,111 @@
+{
+  "name": "Order",
+  "plural": "Order",
+  "base": "PersistedModel",
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "Code": {
+      "type": "string",
+      "id": true,
+      "required": true
+    },
+    "OutletCode": {
+      "type": "string",
+      "required": true
+    },
+    "DP": {
+      "type": "number",
+      "required": true
+    },
+    "Discount": {
+      "type": "number",
+      "required": true
+    },
+    "DiscountNominal": {
+      "type": "number",
+      "required": true
+    },
+    "TotalPrice": {
+      "type": "number",
+      "required": true
+    },
+    "RequestDate": {
+      "type": "string",
+      "required": true
+    },
+    "DeliveryDate": {
+      "type": "date",
+      "required": true
+    },
+    "TotalQty": {
+      "type": "number",
+      "required": true
+    },
+    "Destination": {
+      "type": "string",
+      "required": true
+    },
+    "Phone": {
+      "type": "string",
+      "required": true
+    },
+    "Status": {
+      "type": "string",
+      "required": true
+    },
+    "PaymentType": {
+      "type": "string",
+      "required": true
+    },
+    "Active": {
+      "type": "boolean",
+      "required": true
+    },
+    "Deleted": {
+      "type": "boolean",
+      "required": true
+    },
+    "CreatedBy": {
+      "type": "string",
+      "required": true
+    },
+    "CreatedDate": {
+      "type": "date",
+      "required": true
+    },
+    "CreateAgent": {
+      "type": "string",
+      "required": true
+    },
+    "UpdatedBy": {
+      "type": "string",
+      "required": true
+    },
+    "UpdatedDate": {
+      "type": "date",
+      "required": true
+    },
+    "UpdateAgent": {
+      "type": "string",
+      "required": true
+    }
+  },
+  "validations": [],
+  "relations": {
+    "dealer": {
+      "type": "belongsTo",
+      "model": "Dealer",
+      "foreignKey": "DealerCode"
+    },
+    "OrderDetail": {
+      "type": "hasMany",
+      "model": "OrderDetail",
+      "foreignKey": "OrderCode"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

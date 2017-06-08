@@ -1,0 +1,69 @@
+{
+  "name": "Brand",
+  "base": "PersistedModel",
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "Code": {
+      "type": "string",
+      "id": true,
+      "required": true
+    },
+    "Nama": {
+      "type": "string",
+      "required": true
+    },
+    "Description": {
+      "type": "string",
+      "required": true
+    },
+    "Logo": {
+      "type": "string",
+      "required": true
+    },
+    "Active": {
+      "type": "boolean",
+      "required": true
+    },
+    "Deleted": {
+      "type": "boolean",
+      "required": true
+    },
+    "CreatedBy": {
+      "type": "string",
+      "required": true
+    },
+    "CreatedDate": {
+      "type": "date",
+      "required": true
+    },
+    "CreateAgent": {
+      "type": "string",
+      "required": true
+    },
+    "UpdatedBy": {
+      "type": "string",
+      "required": true
+    },
+    "UpdatedDate": {
+      "type": "date",
+      "required": true
+    },
+    "UpdateAgent": {
+      "type": "string",
+      "required": true
+    }
+  },
+  "validations": [],
+  "relations": {
+    "Product": {
+      "type": "hasMany",
+      "model": "Product",
+      "foreignKey": "BrandCode"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}
