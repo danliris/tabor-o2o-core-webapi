@@ -35,11 +35,31 @@
     "dataSource": "db",
     "public": false
   },
-  "demo": {
+  "Product": {
     "dataSource": "sql-azure",
     "public": true
   },
-  "DemoChild": {
+  "Brand": {
+    "dataSource": "sql-azure",
+    "public": true
+  },
+  "Dealer": {
+    "dataSource": "sql-azure",
+    "public": true
+  },
+  "Order": {
+    "dataSource": "sql-azure",
+    "public": true
+  },
+  "OrderDetail": {
+    "dataSource": "sql-azure",
+    "public": true
+  },
+  "ProductDealer": {
+    "dataSource": "sql-azure",
+    "public": true
+  },
+  "Kiosk": {
     "dataSource": "sql-azure",
     "public": true
   }
