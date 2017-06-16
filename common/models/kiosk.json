@@ -1,0 +1,64 @@
+{
+  "name": "Kiosk",
+  "base": "PersistedModel",
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins": {
+    "TimeStamp": {}
+  },
+  "properties": {
+    "Code": {
+      "type": "string",
+      "id":true,
+      "required": true
+    },
+    "Nama": {
+      "type": "string",
+      "required": true
+    },
+    "Address": {
+      "type": "string",
+      "required": true
+    },
+    "PhoneNumber": {
+      "type": "string",
+      "required": true
+    },
+    "OutletId": {
+      "type": "number",
+      "required": true
+    },
+    "OutletCode": {
+      "type": "string",
+      "required": true
+    },
+    "OutletName": {
+      "type": "string",
+      "required": true
+    },
+    "BranchId": {
+      "type": "number",
+      "required": true
+    },
+    "BranchCode": {
+      "type": "string",
+      "required": true
+    },
+    "BranchName": {
+      "type": "string",
+      "required": true
+    }
+  },
+  "validations": [],
+  "relations": {
+    "Order": {
+      "type": "hasMany",
+      "model": "Order",
+      "foreignKey": "KioskCode"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}
