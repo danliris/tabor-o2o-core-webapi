@@ -6,6 +6,9 @@
   "options": {
     "validateUpsert": true
   },
+  "mixins": {
+    "TimeStamp": {}
+  },
   "properties": {
     "Code": {
       "type": "string",
@@ -27,48 +30,16 @@
     "Status": {
       "type": "string",
       "required": true
-    },
-    "Active": {
-      "type": "boolean",
-      "required": true
-    },
-    "Deleted": {
-      "type": "boolean",
-      "required": true
-    },
-    "CreatedBy": {
-      "type": "string",
-      "required": true
-    },
-    "CreatedDate": {
-      "type": "date",
-      "required": true
-    },
-    "CreateAgent": {
-      "type": "string",
-      "required": true
-    },
-    "UpdatedBy": {
-      "type": "string",
-      "required": true
-    },
-    "UpdatedDate": {
-      "type": "date",
-      "required": true
-    },
-    "UpdateAgent": {
-      "type": "string",
-      "required": true
     }
   },
   "validations": [],
   "relations": {
-     "Order": {
+    "Order": {
       "type": "belongsTo",
       "model": "Order",
       "foreignKey": "OrderCode"
     },
-     "Product": {
+    "Product": {
       "type": "belongsTo",
       "model": "Product",
       "foreignKey": "ProductCode"

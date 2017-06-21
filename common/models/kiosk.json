@@ -1,5 +1,5 @@
 {
-  "name": "Dealer",
+  "name": "Kiosk",
   "base": "PersistedModel",
   "idInjection": false,
   "options": {
@@ -11,10 +11,30 @@
   "properties": {
     "Code": {
       "type": "string",
-      "id": true,
+      "id":true,
       "required": true
     },
-    "Name": {
+    "Nama": {
+      "type": "string",
+      "required": true
+    },
+    "Address": {
+      "type": "string",
+      "required": true
+    },
+    "PhoneNumber": {
+      "type": "string",
+      "required": true
+    },
+    "OutletId": {
+      "type": "number",
+      "required": true
+    },
+    "OutletCode": {
+      "type": "string",
+      "required": true
+    },
+    "OutletName": {
       "type": "string",
       "required": true
     },
@@ -29,18 +49,6 @@
     "BranchName": {
       "type": "string",
       "required": true
-    },
-    "Description": {
-      "type": "string",
-      "required": true
-    },
-    "Address": {
-      "type": "string",
-      "required": true
-    },
-    "PhoneNumber": {
-      "type": "string",
-      "required": true
     }
   },
   "validations": [],
@@ -48,12 +56,7 @@
     "Order": {
       "type": "hasMany",
       "model": "Order",
-      "foreignKey": "DealerCode"
-    },
-    "ProductDealer": {
-      "type": "hasMany",
-      "model": "ProductDealer",
-      "foreignKey": "DealerCode"
+      "foreignKey": "KioskCode"
     }
   },
   "acls": [],
