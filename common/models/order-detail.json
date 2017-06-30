@@ -1,6 +1,6 @@
 {
   "name": "OrderDetail",
-  "plural": "OrderDetail",
+  "plural": "orderDetails",
   "base": "PersistedModel",
   "idInjection": false,
   "options": {
@@ -13,23 +13,25 @@
     "Code": {
       "type": "string",
       "id": true,
-      "required": true
+       "required": true
+      
     },
     "IsRetur": {
       "type": "boolean",
-      "required": true
+       "required": true
     },
     "Price": {
       "type": "number",
-      "required": true
+       "required": true
     },
     "IMEI": {
       "type": "string",
-      "required": true
+       "required": true
     },
     "Status": {
       "type": "string",
-      "required": true
+       "required": true
+      
     }
   },
   "validations": [],
