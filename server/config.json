@@ -1,8 +1,8 @@
 {
   "restApiRoot": "/api",
-  "host": "0.0.0.0",
-  "port": 1337,
-  "url": "http://localhost:1337/",
+  "host": "11.11.1.42",
+  "port": 10010,
+  "url": "http://theatre:10010/",
   "remoting": {
     "context": false,
     "rest": {
