@@ -1,8 +1,8 @@
 {
   "restApiRoot": "/api",
-  "host": "11.11.1.42",
+  "host": "localhost",
   "port": 10010,
-  "url": "http://theatre:10010/",
+  "url": "http://localhost:10010/",
   "remoting": {
     "context": false,
     "rest": {
@@ -12,11 +12,11 @@
     },
     "json": {
       "strict": false,
-      "limit": "100kb"
+      "limit": "1000kb"
     },
     "urlencoded": {
       "extended": true,
-      "limit": "100kb"
+      "limit": "1000kb"
     },
     "cors": false
   }
