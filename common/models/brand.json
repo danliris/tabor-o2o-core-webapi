@@ -19,8 +19,7 @@
       "required": true
     },
     "Description": {
-      "type": "string",
-      "required": true
+      "type": "string"
     },
     "Logo": {
       "type": "string",
