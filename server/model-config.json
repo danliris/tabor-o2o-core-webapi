@@ -14,25 +14,25 @@
     ]
   },
   "User": {
-    "dataSource": "db"
+    "dataSource": "sql-azure"
   },
   "AccessToken": {
-    "dataSource": "db",
+    "dataSource": "sql-azure",
     "public": false
   },
   "ACL": {
-    "dataSource": "db",
+    "dataSource": "sql-azure",
     "public": false
   },
   "RoleMapping": {
-    "dataSource": "db",
+    "dataSource": "sql-azure",
     "public": false,
     "options": {
       "strictObjectIDCoercion": true
     }
   },
   "Role": {
-    "dataSource": "db",
+    "dataSource": "sql-azure",
     "public": false
   },
   "Product": {
