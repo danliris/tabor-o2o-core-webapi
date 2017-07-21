@@ -30,6 +30,10 @@
       "type": "number",
       "required": true
     },
+    "DP": {
+      "type": "number",
+      "required": true
+    },
     "Specification": {
       "type": "string",
       "required": true
