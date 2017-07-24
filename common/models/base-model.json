@@ -1,0 +1,31 @@
+{
+    "name": "BaseModel",
+    "base": "PersistedModel",
+    "idInjection": false,
+    "options": {
+        "validateUpsert": true
+    },
+    "forceId": true,
+    "mixins": {
+        "TimeStamp": {}
+    },
+    "scope": {
+        "where": {
+            "Deleted": false
+        }
+    },
+    "hidden": [
+        "CreatedBy",
+        "CreatedDate",
+        "CreateAgent",
+        "UpdatedBy",
+        "UpdatedDate",
+        "UpdateAgent",
+        "Deleted"
+    ],
+    "properties": {},
+    "validations": [],
+    "relations": {},
+    "acls": [],
+    "methods": {}
+}

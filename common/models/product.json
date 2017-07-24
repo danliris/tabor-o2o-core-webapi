@@ -34,24 +34,24 @@
       "type": "string",
       "required": true
     },
-    "Image":{
-      "type" : "string",
-      "required":true
+    "Image": {
+      "type": "string",
+      "required": true
     }
   },
   "validations": [],
   "relations": {
-    "brand": {
+    "Brand": {
       "type": "belongsTo",
       "model": "Brand",
       "foreignKey": "BrandCode"
     },
-    "OrderDetail": {
+    "OrderDetails": {
       "type": "hasMany",
       "model": "OrderDetail",
       "foreignKey": "ProductCode"
     },
-    "ProductDealer": {
+    "ProductDealers": {
       "type": "hasMany",
       "model": "ProductDealer",
       "foreignKey": "ProductCode"

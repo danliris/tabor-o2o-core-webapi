@@ -1,5 +1,5 @@
 'use strict';
 
-module.exports = function(Kiosk) {
+module.exports = function (Kiosk) {
 
 };
