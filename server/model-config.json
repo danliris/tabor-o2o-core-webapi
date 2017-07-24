@@ -14,53 +14,53 @@
     ]
   },
   "User": {
-    "dataSource": "sql-local"
+    "dataSource": "sql-azure"
   },
   "AccessToken": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": false
   },
   "ACL": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": false
   },
   "RoleMapping": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": false,
     "options": {
       "strictObjectIDCoercion": true
     }
   },
   "Role": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": false
   },
   "Product": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": true
   },
   "Brand": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": true
   },
   "Dealer": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": true
   },
   "Order": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": true
   },
   "OrderDetail": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": true
   },
   "ProductDealer": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": true
   },
   "Kiosk": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": true
   }
 }
