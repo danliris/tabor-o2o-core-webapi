@@ -11,10 +11,10 @@
   "properties": {
     "Code": {
       "type": "string",
-      "id":true,
+      "id": true,
       "required": true
     },
-    "Nama": {
+    "Name": {
       "type": "string",
       "required": true
     },
@@ -53,7 +53,7 @@
   },
   "validations": [],
   "relations": {
-    "Order": {
+    "Orders": {
       "type": "hasMany",
       "model": "Order",
       "foreignKey": "KioskCode"

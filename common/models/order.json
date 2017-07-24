@@ -1,6 +1,5 @@
 {
   "name": "Order",
-  "plural": "Order",
   "base": "PersistedModel",
   "idInjection": false,
   "options": {
@@ -13,63 +12,51 @@
     "Code": {
       "type": "string",
       "id": true,
-       "required": true
-      
+      "required": true
     },
     "DP": {
       "type": "number",
-       "required": true
-      
+      "required": true
     },
     "Discount": {
       "type": "number",
-       "required": true
-      
+      "required": true
     },
     "DiscountNominal": {
       "type": "number",
-       "required": true
-      
+      "required": true
     },
     "TotalPrice": {
       "type": "number",
-       "required": true
-      
+      "required": true
     },
     "RequestDate": {
       "type": "string",
-       "required": true
-      
+      "required": true
     },
     "DeliveryDate": {
       "type": "date",
-       "required": true
-      
+      "required": true
     },
     "TotalQty": {
       "type": "number",
-       "required": true
-      
+      "required": true
     },
     "Destination": {
       "type": "string",
-       "required": true
-      
+      "required": true
     },
     "Phone": {
       "type": "string",
-       "required": true
-      
+      "required": true
     },
     "Status": {
       "type": "string",
-       "required": true
-      
+      "required": true
     },
     "PaymentType": {
       "type": "string",
-       "required": true
-      
+      "required": true
     }
   },
   "validations": [],
@@ -79,7 +66,7 @@
       "model": "Dealer",
       "foreignKey": "DealerCode"
     },
-    "orderDetails": {
+    "OrderDetails": {
       "type": "hasMany",
       "model": "OrderDetail",
       "foreignKey": "OrderCode"

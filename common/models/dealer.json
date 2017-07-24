@@ -1,6 +1,6 @@
 {
   "name": "Dealer",
-  "base": "PersistedModel",
+  "base": "BaseModel",
   "idInjection": false,
   "options": {
     "validateUpsert": true
@@ -45,12 +45,12 @@
   },
   "validations": [],
   "relations": {
-    "Order": {
+    "Orders": {
       "type": "hasMany",
       "model": "Order",
       "foreignKey": "DealerCode"
     },
-    "ProductDealer": {
+    "ProductDealers": {
       "type": "hasMany",
       "model": "ProductDealer",
       "foreignKey": "DealerCode"
