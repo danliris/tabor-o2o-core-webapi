@@ -55,11 +55,31 @@
     "dataSource": "sql-local",
     "public": true
   },
+  "OrderDetailIMEI": {
+    "dataSource": "sql-local",
+    "public": true
+  },
+  "OrderTrack": {
+    "dataSource": "sql-local",
+    "public": true
+  },
+  "OrderPayment": {
+    "dataSource": "sql-local",
+    "public": true
+  },
   "ProductDealer": {
     "dataSource": "sql-local",
     "public": true
   },
   "Kiosk": {
+    "dataSource": "sql-local",
+    "public": true
+  },
+  "KioskProductDealer": {
+    "dataSource": "sql-local",
+    "public": true
+  },
+  "Configuration": {
     "dataSource": "sql-local",
     "public": true
   }

@@ -1,0 +1,39 @@
+{
+  "name": "OrderTrack",
+  "plural": "OrderTracks",
+  "base": "BaseModel",
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins": {
+    "TimeStamp": {}
+  },
+  "properties": {
+    "OrderCode": {
+      "type": "string"
+    },
+    "OrderDetailCode": {
+      "type": "string"
+    },
+    "TrackDate": {
+      "type": "date"
+    },
+    "Status": {
+      "type": "string"
+    },
+    "Remark": {
+      "type": "string"
+    }
+  },
+  "validations": [],
+  "relations": {
+    "OrderDetail": {
+      "type": "belongsTo",
+      "model": "OrderDetail",
+      "foreignKey": "OrderDetailCode"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

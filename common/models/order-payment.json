@@ -1,6 +1,6 @@
 {
-  "name": "Brand",
-  "plural": "Brands",
+  "name": "OrderPayment",
+  "plural": "OrderPayments",
   "base": "BaseModel",
   "idInjection": false,
   "options": {
@@ -10,29 +10,32 @@
     "TimeStamp": {}
   },
   "properties": {
-    "Code": {
-      "type": "string",
-      "id": true,
-      "required": true
-    },
-    "Name": {
+    "OrderCode": {
       "type": "string",
       "required": true
     },
-    "Description": {
+    "PaymentType": {
+      "type": "string",
+      "required": true
+    },
+    "Amount": {
+      "type": "number",
+      "required": true
+    },  
+    "PaidAmount": {
+      "type": "number",
+      "required": true
+    },
+    "Remark": {
       "type": "string"
-    },
-    "Logo": {
-      "type": "string",
-      "required": true
     }
   },
   "validations": [],
   "relations": {
-    "Products": {
-      "type": "hasMany",
-      "model": "Product",
-      "foreignKey": "BrandCode"
+    "Order": {
+      "type": "belongsTo",
+      "model": "Order",
+      "foreignKey": "OrderCode"
     }
   },
   "acls": [],

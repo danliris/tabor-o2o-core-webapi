@@ -1,6 +1,7 @@
 {
   "name": "Kiosk",
-  "base": "PersistedModel",
+  "plural": "Kiosks",
+  "base": "BaseModel",
   "idInjection": false,
   "options": {
     "validateUpsert": true
@@ -56,6 +57,16 @@
     "Orders": {
       "type": "hasMany",
       "model": "Order",
+      "foreignKey": "KioskCode"
+    },
+    "KioskProductDealers": {
+      "type": "hasMany",
+      "model": "KioskProductDealer",
+      "foreignKey": "KioskCode"
+    },
+    "KioskUsers": {
+      "type": "hasMany",
+      "model": "KioskUser",
       "foreignKey": "KioskCode"
     }
   },

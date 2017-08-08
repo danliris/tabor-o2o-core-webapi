@@ -1,6 +1,6 @@
 {
   "name": "Product",
-  "base": "PersistedModel",
+  "base": "BaseModel",
   "idInjection": false,
   "options": {
     "validateUpsert": true
