@@ -1,5 +1,6 @@
 {
-  "name": "ProductDealer",
+  "name": "KioskProductDealer",
+  "plural": "KioskProductDealers",
   "base": "BaseModel",
   "idInjection": false,
   "options": {
@@ -9,35 +10,32 @@
     "TimeStamp": {}
   },
   "properties": {
+    "KioskCode": {
+      "type": "string"
+    },
     "ProductCode": {
       "type": "string"
     },
     "DealerCode": {
       "type": "string"
-    },
-    "SKU": {
-      "type": "string",
-      "required": true
-    },
-    "Quantity": {
-      "type": "number"
-    },
-    "IsAvailable": {
-      "type": "boolean",
-      "required": true
     }
   },
   "validations": [],
   "relations": {
-    "Dealer": {
+    "Kiosk": {
       "type": "belongsTo",
-      "model": "Dealer",
-      "foreignKey": "DealerCode"
+      "model": "Kiosk",
+      "foreignKey": "KioskCode"
     },
     "Product": {
       "type": "belongsTo",
       "model": "Product",
       "foreignKey": "ProductCode"
+    },
+    "Dealer": {
+      "type": "belongsTo",
+      "model": "Dealer",
+      "foreignKey": "DealerCode"
     }
   },
   "acls": [],

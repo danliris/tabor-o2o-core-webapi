@@ -1,7 +1,7 @@
 {
   "name": "OrderDetail",
   "plural": "OrderDetails",
-  "base": "PersistedModel",
+  "base": "BaseModel",
   "idInjection": false,
   "options": {
     "validateUpsert": true
@@ -15,16 +15,35 @@
       "id": true,
       "required": true
     },
-    "IsRetur": {
-      "type": "boolean",
+    "OrderCode": {
+      "type": "string",
+      "required": true
+    },
+    "ProductCode": {
+      "type": "string",
+      "required": true
+    },
+    "DealerCode": {
+      "type": "string",
+      "required": true
+    },
+    "Quantity": {
+      "type": "number",
       "required": true
     },
     "Price": {
       "type": "number",
       "required": true
     },
-    "IMEI": {
-      "type": "string",
+    "ShippingFee": {
+      "type": "number",
+      "required": true
+    },
+    "DPNominal": {
+      "type": "number"
+    },
+    "IsRetur": {
+      "type": "boolean",
       "required": true
     },
     "Status": {
@@ -43,6 +62,16 @@
       "type": "belongsTo",
       "model": "Product",
       "foreignKey": "ProductCode"
+    },
+    "OrderTracks": {
+      "type": "hasMany",
+      "model": "OrderTrack",
+      "foreignKey": "OrderDetailCode"
+    },
+    "OrderDetailIMEIs": {
+      "type": "hasMany",
+      "model": "OrderDetailIMEI",
+      "foreignKey": "OrderDetailCode"
     }
   },
   "acls": [],
