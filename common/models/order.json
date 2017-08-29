@@ -1,6 +1,6 @@
 {
   "name": "Order",
-  "base": "PersistedModel",
+  "base": "BaseModel",
   "idInjection": false,
   "options": {
     "validateUpsert": true
@@ -14,61 +14,69 @@
       "id": true,
       "required": true
     },
-    "DP": {
-      "type": "number",
+    "KioskCode": {
+      "type": "string",
       "required": true
     },
-    "Discount": {
-      "type": "number",
-      "required": true
+    "IdCard": {
+      "type": "string"
     },
-    "DiscountNominal": {
-      "type": "number",
-      "required": true
+    "Name": {
+      "type": "string"
     },
-    "TotalPrice": {
-      "type": "number",
-      "required": true
+    "Email": {
+      "type": "string"
     },
     "RequestDate": {
-      "type": "string",
-      "required": true
+      "type": "date"
     },
-    "DeliveryDate": {
-      "type": "date",
-      "required": true
+    "Latitude": {
+      "type": "number"
     },
-    "TotalQty": {
-      "type": "number",
-      "required": true
+    "Longitude": {
+      "type": "number"
+    },
+    "SelfPickUp": {
+      "type": "boolean"
     },
     "Destination": {
-      "type": "string",
-      "required": true
+      "type": "string"
     },
     "Phone": {
-      "type": "string",
-      "required": true
+      "type": "string"
+    },
+    "PIN": {
+      "type": "string"
+    },
+    "DP": {
+      "type": "number"
+    },
+    "TotalQuantity": {
+      "type": "number"
+    },
+    "TotalShippingFee": {
+      "type": "number"
+    },
+    "TotalPrice": {
+      "type": "number"
     },
     "Status": {
-      "type": "string",
-      "required": true
+      "type": "string"
     },
-    "PaymentType": {
-      "type": "string",
-      "required": true
+    "IsFullyPaid": {
+      "type": "boolean"
     }
   },
   "validations": [],
   "relations": {
-    "Dealer": {
-      "type": "belongsTo",
-      "model": "Dealer",
-      "foreignKey": "DealerCode"
-    },
     "OrderDetails": {
       "type": "hasMany",
       "model": "OrderDetail",
+      "foreignKey": "OrderCode"
+    },
+    "OrderPayments": {
+      "type": "hasMany",
+      "model": "OrderPayment",
       "foreignKey": "OrderCode"
     },
     "Kiosk": {

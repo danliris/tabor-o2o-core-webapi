@@ -1,0 +1,36 @@
+{
+  "name": "DealerUser",
+  "base": "BaseModel",
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins": {
+    "TimeStamp": {}
+  },
+  "properties": {
+    "UserId": {
+      "type": "number",
+      "required": true
+    },
+    "DealerCode": {
+      "type": "string",
+      "required": true
+    }
+  },
+  "validations": [],
+  "relations": {
+    "Users": {
+      "type": "belongsTo",
+      "model": "User",
+      "foreignKey": "UserId"
+    },
+    "Dealers": {
+      "type": "belongsTo",
+      "model": "Dealer",
+      "foreignKey": "DealerCode"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

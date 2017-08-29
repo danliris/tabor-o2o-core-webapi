@@ -55,6 +55,18 @@
     "dataSource": "sql-azure",
     "public": true
   },
+  "OrderDetailIMEI": {
+    "dataSource": "sql-local",
+    "public": true
+  },
+  "OrderTrack": {
+    "dataSource": "sql-local",
+    "public": true
+  },
+  "OrderPayment": {
+    "dataSource": "sql-local",
+    "public": true
+  },
   "ProductDealer": {
     "dataSource": "sql-azure",
     "public": true
@@ -62,5 +74,33 @@
   "Kiosk": {
     "dataSource": "sql-azure",
     "public": true
+  },
+  "KioskProductDealer": {
+    "dataSource": "sql-local",
+    "public": true
+  },
+  "DealerUser": {
+    "dataSource": "sql-local",
+    "public": true
+  },
+  "Configuration": {
+    "dataSource": "sql-local",
+    "public": true
+  },
+  "VMappedProduct": {
+    "dataSource": "sql-local",
+    "public": true,
+    "options": {
+      "remoting": {
+        "sharedMethods": {
+          "*": false,
+          "find": true,
+          "findById": true,
+          "findOne": true,
+          "count": true,
+          "exists": true
+        }
+      }
+    }
   }
 }

@@ -1,6 +1,6 @@
 {
-  "name": "Brand",
-  "plural": "Brands",
+  "name": "OrderDetailIMEI",
+  "plural": "OrderDetailIMEIs",
   "base": "BaseModel",
   "idInjection": false,
   "options": {
@@ -10,29 +10,21 @@
     "TimeStamp": {}
   },
   "properties": {
-    "Code": {
-      "type": "string",
-      "id": true,
-      "required": true
-    },
-    "Name": {
+    "OrderDetailCode": {
       "type": "string",
       "required": true
     },
-    "Description": {
-      "type": "string"
-    },
-    "Logo": {
+    "IMEI": {
       "type": "string",
       "required": true
     }
   },
   "validations": [],
   "relations": {
-    "Products": {
-      "type": "hasMany",
-      "model": "Product",
-      "foreignKey": "BrandCode"
+    "OrderDetail": {
+      "type": "belongsTo",
+      "model": "OrderDetail",
+      "foreignKey": "OrderDetailCode"
     }
   },
   "acls": [],
