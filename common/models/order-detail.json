@@ -49,6 +49,10 @@
     "Status": {
       "type": "string",
       "required": true
+    },
+    "Date": {
+      "type": "date",
+      "required": true
     }
   },
   "validations": [],

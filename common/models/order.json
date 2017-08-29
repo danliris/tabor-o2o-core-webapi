@@ -26,6 +26,9 @@
     "Email": {
       "type": "string"
     },
+    "Date": {
+      "type": "date"
+    },
     "Latitude": {
       "type": "number"
     },
@@ -58,6 +61,10 @@
     },
     "IsFullyPaid": {
       "type": "boolean"
+    },
+    "Date": {
+      "type": "date",
+      "required": true
     }
   },
   "validations": [],
