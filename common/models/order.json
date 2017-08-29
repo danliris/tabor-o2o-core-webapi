@@ -15,7 +15,8 @@
       "required": true
     },
     "KioskCode": {
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "IdCard": {
       "type": "string"
@@ -26,7 +27,7 @@
     "Email": {
       "type": "string"
     },
-    "Date": {
+    "RequestDate": {
       "type": "date"
     },
     "Latitude": {
@@ -34,6 +35,9 @@
     },
     "Longitude": {
       "type": "number"
+    },
+    "SelfPickUp": {
+      "type": "boolean"
     },
     "Destination": {
       "type": "string"
@@ -61,10 +65,6 @@
     },
     "IsFullyPaid": {
       "type": "boolean"
-    },
-    "Date": {
-      "type": "date",
-      "required": true
     }
   },
   "validations": [],

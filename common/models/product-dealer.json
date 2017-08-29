@@ -38,6 +38,11 @@
       "type": "belongsTo",
       "model": "Product",
       "foreignKey": "ProductCode"
+    },
+    "KioskProductDealers": {
+      "type": "hasMany",
+      "model": "KioskProductDealer",
+      "foreignKey": "ProductDealerId"
     }
   },
   "acls": [],

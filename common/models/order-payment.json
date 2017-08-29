@@ -18,16 +18,23 @@
       "type": "string",
       "required": true
     },
+    "TransactionDate": {
+      "type": "date",
+      "required": true
+    },
     "Amount": {
       "type": "number",
       "required": true
-    },  
+    },
     "PaidAmount": {
       "type": "number",
       "required": true
     },
     "Remark": {
       "type": "string"
+    },
+    "CreatedDate": {
+      "type": "date"
     }
   },
   "validations": [],

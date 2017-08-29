@@ -13,11 +13,8 @@
     "KioskCode": {
       "type": "string"
     },
-    "ProductCode": {
-      "type": "string"
-    },
-    "DealerCode": {
-      "type": "string"
+    "ProductDealerId": {
+      "type": "number"
     }
   },
   "validations": [],
@@ -27,15 +24,10 @@
       "model": "Kiosk",
       "foreignKey": "KioskCode"
     },
-    "Product": {
+    "ProductDealer": {
       "type": "belongsTo",
-      "model": "Product",
-      "foreignKey": "ProductCode"
-    },
-    "Dealer": {
-      "type": "belongsTo",
-      "model": "Dealer",
-      "foreignKey": "DealerCode"
+      "model": "ProductDealer",
+      "foreignKey": "ProductDealerId"
     }
   },
   "acls": [],
