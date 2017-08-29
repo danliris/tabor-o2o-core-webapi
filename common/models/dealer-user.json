@@ -1,6 +1,5 @@
 {
-  "name": "OrderDetailIMEI",
-  "plural": "OrderDetailIMEIs",
+  "name": "DealerUser",
   "base": "BaseModel",
   "idInjection": false,
   "options": {
@@ -10,21 +9,26 @@
     "TimeStamp": {}
   },
   "properties": {
-    "OrderDetailCode": {
-      "type": "string",
+    "UserId": {
+      "type": "number",
       "required": true
     },
-    "IMEI": {
+    "DealerCode": {
       "type": "string",
       "required": true
     }
   },
   "validations": [],
   "relations": {
-    "OrderDetail": {
+    "Users": {
       "type": "belongsTo",
-      "model": "OrderDetail",
-      "foreignKey": "OrderDetailCode"
+      "model": "User",
+      "foreignKey": "UserId"
+    },
+    "Dealers": {
+      "type": "belongsTo",
+      "model": "Dealer",
+      "foreignKey": "DealerCode"
     }
   },
   "acls": [],

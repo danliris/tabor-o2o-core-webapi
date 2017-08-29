@@ -36,7 +36,7 @@ module.exports = function (Order) {
         var orderCode = currentDate.getTime().toString(12);
 
         order.Code = orderCode;
-        order.DealerCode = null;
+        //order.DealerCode = null;
         order.PIN = '12345';
         order.RequestDate = currentDate;
         order.DeliveryDate = currentDate;
@@ -55,7 +55,7 @@ module.exports = function (Order) {
                     detail.IMEI = '';
                     detail.Status = 'CREATED';
                     detail.OrderCode = orderCode;
-
+                    //detail.DealerCode =null;
                     savedOrder.OrderDetails.create(detail);
                 }
 
