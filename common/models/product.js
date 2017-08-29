@@ -38,6 +38,5 @@ module.exports = function (Product) {
         ).then(function (res) {
             return res;
         });
-
     }
 };
