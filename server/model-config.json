@@ -56,15 +56,15 @@
     "public": true
   },
   "OrderDetailIMEI": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": true
   },
   "OrderTrack": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": true
   },
   "OrderPayment": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": true
   },
   "ProductDealer": {
@@ -76,19 +76,19 @@
     "public": true
   },
   "KioskProductDealer": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": true
   },
   "DealerUser": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": true
   },
   "Configuration": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": true
   },
   "VMappedProduct": {
-    "dataSource": "sql-local",
+    "dataSource": "sql-azure",
     "public": true,
     "options": {
       "remoting": {
