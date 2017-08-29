@@ -79,6 +79,10 @@
     "dataSource": "sql-local",
     "public": true
   },
+  "DealerUser": {
+    "dataSource": "sql-local",
+    "public": true
+  },
   "Configuration": {
     "dataSource": "sql-local",
     "public": true

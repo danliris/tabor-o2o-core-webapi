@@ -144,9 +144,10 @@ module.exports = function (Order) {
         order.Status = status;
         order.OrderDetails = [];
 
+
         for (var i = 0; i < data.OrderDetails().length; i++) {
             var detail = data.OrderDetails()[i];
-
+            
             var orderDetail = {};
             orderDetail.Code = idGenerator.generate();
             orderDetail.OrderCode = orderCode;

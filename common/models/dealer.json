@@ -54,6 +54,11 @@
       "type": "hasMany",
       "model": "ProductDealer",
       "foreignKey": "DealerCode"
+    },
+    "DealerUsers": {
+      "type": "hasMany",
+      "model": "DealerUser",
+      "foreignKey": "DealerCode"
     }
   },
   "acls": [],

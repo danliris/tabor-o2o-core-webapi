@@ -27,6 +27,9 @@
     "Email": {
       "type": "string"
     },
+    "RequestDate": {
+      "type": "date"
+    },
     "Latitude": {
       "type": "number"
     },
