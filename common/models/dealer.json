@@ -45,9 +45,9 @@
   },
   "validations": [],
   "relations": {
-    "Orders": {
+    "OrderDetails": {
       "type": "hasMany",
-      "model": "Order",
+      "model": "OrderDetail",
       "foreignKey": "DealerCode"
     },
     "ProductDealers": {

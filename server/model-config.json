@@ -82,5 +82,21 @@
   "Configuration": {
     "dataSource": "sql-local",
     "public": true
+  },
+  "VMappedProduct": {
+    "dataSource": "sql-local",
+    "public": true,
+    "options": {
+      "remoting": {
+        "sharedMethods": {
+          "*": false,
+          "find": true,
+          "findById": true,
+          "findOne": true,
+          "count": true,
+          "exists": true
+        }
+      }
+    }
   }
 }

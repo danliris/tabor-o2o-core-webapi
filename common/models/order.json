@@ -15,7 +15,8 @@
       "required": true
     },
     "KioskCode": {
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "IdCard": {
       "type": "string"
@@ -31,6 +32,9 @@
     },
     "Longitude": {
       "type": "number"
+    },
+    "SelfPickUp": {
+      "type": "boolean"
     },
     "Destination": {
       "type": "string"

@@ -1,0 +1,49 @@
+{
+    "name": "VMappedProduct",
+    "base": "PersistedModel",
+    "properties": {
+        "Code": {
+            "type": "string"
+        },
+        "BrandCode": {
+            "type": "string"
+        },
+        "SKU": {
+            "type": "string"
+        },
+        "Name": {
+            "type": "string"
+        },
+        "Description": {
+            "type": "string"
+        },
+        "Price": {
+            "type": "number"
+        },
+        "DP": {
+            "type": "number"
+        },
+        "Specification": {
+            "type": "string"
+        },
+        "Image": {
+            "type": "string"
+        },
+        "ProductDealerSKU": {
+            "type": "string"
+        },
+        "DealerCode": {
+            "type": "string"
+        },
+        "Quantity": {
+            "type": "number"
+        },
+        "KioskCode": {
+            "type": "string"
+        }
+    },
+    "validations": [],
+    "relations": {},
+    "acls": [],
+    "methods": {}
+}
