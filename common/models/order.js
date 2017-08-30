@@ -76,7 +76,7 @@ module.exports = function (Order) {
 
         order.Name = data.Name;
         order.Email = data.Email;
-        order.Date = data.Date;
+        order.RequestDate = data.RequestDate;
         order.Latitude = data.Latitude;
         order.Longitude = data.Longitude;
         order.SelfPickUp = data.SelfPickUp;
@@ -106,6 +106,7 @@ module.exports = function (Order) {
             orderDetail.Status = detail.Status;
             orderDetail.Price = detail.Price;
             orderDetail.DPNominal = detail.DPNominal;
+            orderDetail.RequestDate = detail.RequestDate;
 
             order.OrderDetails.push(orderDetail);
 
@@ -129,7 +130,7 @@ module.exports = function (Order) {
         order.IdCard = data.IdCard;
         order.Name = data.Name;
         order.Email = data.Email;
-        order.Date = currentDate;
+        order.RequestDate = currentDate;
         order.Latitude = data.Latitude;
         order.Longitude = data.Longitude;
         order.SelfPickUp = data.SelfPickUp;
@@ -147,7 +148,7 @@ module.exports = function (Order) {
 
         for (var i = 0; i < data.OrderDetails().length; i++) {
             var detail = data.OrderDetails()[i];
-            
+
             var orderDetail = {};
             orderDetail.Code = idGenerator.generate();
             orderDetail.OrderCode = orderCode;
@@ -159,6 +160,7 @@ module.exports = function (Order) {
             orderDetail.Status = status;
             orderDetail.Price = detail.Price;
             orderDetail.DPNominal = detail.DPNominal;
+            orderDetail.RequestDate = currentDate;
 
             orderDetail.OrderTracks = [];
             orderDetail.OrderTracks.push({
@@ -229,7 +231,7 @@ module.exports = function (Order) {
                     }, function (err, updatedOrder) {
                         for (var i = 0, length = x.OrderDetails.length; i < length; i++) {
                             var detail = x.OrderDetails[i];
-                            
+
                             updatedOrder
                                 .OrderDetails
                                 .findById(detail.Code)
@@ -303,7 +305,10 @@ module.exports = function (Order) {
                 // update detail + tambahin tracks
                 for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
                     var orderDetail = order.OrderDetails()[i];
-                    orderDetail.updateAttribute('Status', status);
+                    orderDetail.updateAttributes({
+                        'Status': status,
+                        'RequestDate': currentDate
+                    });
 
                     orderDetail.OrderTracks
                         .create({
