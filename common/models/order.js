@@ -20,8 +20,20 @@ module.exports = function (Order) {
         returns: { arg: 'result', type: 'Order' }
     });
 
+    Order.remoteMethod('updatePaymentStatus', {
+        accepts: { arg: 'code', type: 'string' },
+        http: { path: '/payment-status', verb: 'post' },
+        returns: { arg: 'result', type: 'Order' }
+    });
+
+    Order.remoteMethod('completeOrder', {
+        accepts: { arg: 'code', type: 'string' },
+        http: { path: '/complete', verb: 'post' },
+        returns: { arg: 'result', type: 'Order' }
+    });
+
     Order.remoteMethod('voidDraft', {
-        accepts: { arg: 'data', type: 'object' },
+        accepts: { arg: 'code', type: 'string' },
         http: { path: '/void', verb: 'post' },
         returns: { arg: 'result', type: 'Order' }
     });
@@ -214,8 +226,10 @@ module.exports = function (Order) {
                     , Status: 'DRAFTED'
                 }
             })
-            .then(function (orderToBeUpdated) {
-                orderToBeUpdated.updateAttributes(
+            .then(function (_orderFound) {
+                var promises = [];
+
+                _orderFound.updateAttributes(
                     {
                         'IdCard': x.IdCard
                         , 'Name': x.Name
@@ -228,26 +242,25 @@ module.exports = function (Order) {
                         , 'TotalShippingFee': x.TotalShippingFee
                         , 'TotalPrice': x.TotalPrice
                         , 'IsFullyPaid': x.IsFullyPaid
-                    }, function (err, updatedOrder) {
+                    }, function (err, _orderUpdated) {
                         for (var i = 0, length = x.OrderDetails.length; i < length; i++) {
                             var detail = x.OrderDetails[i];
 
-                            updatedOrder
-                                .OrderDetails
-                                .findById(detail.Code)
-                                .then(function (detailToBeUpdated) {
-                                    detailToBeUpdated.updateAttributes({
+                            promises.push(
+                                _orderUpdated.OrderDetails
+                                    .updateById(detail.Code, {
                                         'Quantity': detail.Quantity,
                                         'Price': detail.Price,
                                         'ShippingFee': detail.ShippingFee,
                                         'DPNominal': detail.DPNominal
-                                    }, function (err, updatedDetail) {
-                                        console.log(updatedDetail);
-                                    });
-                                });
+                                    })
+                            );
                         }
 
-                        return updatedOrder;
+                        Promise.all(promises)
+                            .then(response => {
+                                return _orderFound;
+                            });
                     });
             });
 
@@ -255,12 +268,7 @@ module.exports = function (Order) {
 
     Order.payment = function (data, cb) {
         var currentDate = new Date();
-        var status = 'REQUESTED';
-
-        data.PaymentType = 'CASH';
-        data.Remark = '-';
-        data.TransactionDate = currentDate;
-
+        // mesti ambil order yang belum lunas
         return Order
             .findOne({
                 include: [
@@ -269,76 +277,152 @@ module.exports = function (Order) {
                 ],
                 where: {
                     Code: data.OrderCode
-                    , IsFullyPaid: false
-                    , Status: 'DRAFTED'
                 }
             })
             .then(function (order) {
-                // add to order payment
+                if (order == null)
+                    throw 'Not found / Invalid Status';
+
+                if (order.IsFullyPaid)
+                    throw 'Order has been paid fully';
+
+                if (order.Status != 'DRAFTED' && order.Status != 'ARRIVED')
+                    throw 'Invalid status';
+
                 order.OrderPayments
-                    .create(data)
-                    .then(function (res) {
-                        var total = 0,
-                            isFullyPaid = false;
-
-                        for (var i = 0; i < order.OrderPayments().length; i++) {
-                            total += order.OrderPayments()[i].Amount;
-                        }
-
-                        if (total >= order.TotalPrice + order.TotalShippingFee) {
-                            isFullyPaid = true;
-                        }
-
-                        order
-                            .updateAttributes({
-                                Status: status,
-                                IsFullyPaid: isFullyPaid
-                            }, function (err, res) {
-
-                            });
+                    .create({
+                        TransactionDate: currentDate,
+                        PaymentType: 'CASH',
+                        Amount: data.Amount,
+                        PaidAmount: data.PaidAmount,
+                        Remark: '-'
                     });
+                return order;
+            });
+    }
 
-                // order.OrderDetails
-                //     .updateAll({}, { 'Status': status }, function (err, info, count) {
-                //     });
+    Order.updatePaymentStatus = function (code, cb) {
+        var currentDate = new Date();
+        return Order
+            .findOne({
+                include: [
+                    'OrderDetails'
+                    , 'OrderPayments'
+                ],
+                where: {
+                    Code: code
+                }
+            })
+            .then(function (order) {
+                if (order == null) {
+                    throw 'Not found / Invalid Status';
+                }
 
-                // update detail + tambahin tracks
+                if (order.Status != 'DRAFTED' && order.Status != 'ARRIVED')
+                    throw 'Invalid Status';
+
+                var totalPaidAmount = order.OrderPayments().reduce(function (a, b) {
+                    return b.Amount + a;
+                }, 0);
+
+                // lunas?
+                var isFullyPaid = totalPaidAmount >= order.TotalPrice + order.TotalShippingFee;
+
+                var nextStatus = '';
+                if (order.Status == 'DRAFTED')
+                    nextStatus = 'REQUESTED';
+                else if (order.Status == 'ARRIVED')
+                    nextStatus = 'RECEIVED';
+
+                order.updateAttributes({ Status: nextStatus, IsFullyPaid: isFullyPaid });
+
+                order.OrderDetails.updateAll({}, { 'Status': nextStatus }, function (err, info, count) { });
+
                 for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
-                    var orderDetail = order.OrderDetails()[i];
-                    orderDetail.updateAttributes({
-                        'Status': status,
-                        'RequestDate': currentDate
-                    });
-
-                    orderDetail.OrderTracks
+                    order.OrderDetails()[i].OrderTracks
                         .create({
-                            OrderCode: order.Code,
-                            OrderDetailCode: orderDetail.Code,
+                            OrderCode: order.OrderDetails()[i].OrderCode,
+                            OrderDetailCode: order.OrderDetails()[i].Code,
                             TrackDate: currentDate,
-                            Status: status,
+                            Status: nextStatus,
                             Remark: '-'
                         });
                 }
+
                 return order;
+
             });
-
-        // // update detail + tambahin tracks
-        // for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
-        //     var orderDetail = order.OrderDetails()[i];
-        //     orderDetail.updateAttribute('Status', status);
-
-        //     orderDetail.OrderTracks
-        //         .create({
-        //             OrderCode: order.Code,
-        //             OrderDetailCode: orderDetail.Code,
-        //             TrackDate: currentDate,
-        //             Status: status,
-        //             Remark: '-'
-        //         });
-        // }
     }
 
-    Order.voidDraft = function (data, cb) {
+    Order.voidDraft = function (code, cb) {
+        var currentDate = new Date();
+        return Order
+            .findOne({
+                include: [
+                    'OrderDetails'
+                ],
+                where: {
+                    Code: code
+                }
+            })
+            .then(function (order) {
+                if (order == null) {
+                    throw 'Not found / Invalid Status';
+                }
 
+                if (order.Status != 'DRAFTED')
+                    throw 'Invalid Status';
+
+                order.updateAttribute('Status', 'VOIDED');
+                order.OrderDetails.updateAll({}, { 'Status': 'VOIDED' }, function (err, info, count) { });
+                for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
+                    order.OrderDetails()[i].OrderTracks
+                        .create({
+                            OrderCode: order.OrderDetails()[i].OrderCode,
+                            OrderDetailCode: order.OrderDetails()[i].Code,
+                            TrackDate: currentDate,
+                            Status: 'VOIDED',
+                            Remark: '-'
+                        });
+                }
+
+                return order;
+            });
+    }
+
+    Order.completeOrder = function (code, cb) {
+        var currentDate = new Date();
+        return Order
+            .findOne({
+                include: [
+                    'OrderDetails'
+                ],
+                where: {
+                    Code: code
+                }
+            })
+            .then(function (order) {
+                if (order == null) {
+                    throw 'Not found / Invalid Status';
+                }
+
+                if (order.Status != 'ARRIVED')
+                    throw 'Invalid Status';
+
+                order.updateAttribute('Status', 'RECEIVED');
+                order.OrderDetails.updateAll({}, { 'Status': 'RECEIVED' }, function (err, info, count) { });
+                for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
+                    order.OrderDetails()[i].OrderTracks
+                        .create({
+                            OrderCode: order.OrderDetails()[i].OrderCode,
+                            OrderDetailCode: order.OrderDetails()[i].Code,
+                            TrackDate: currentDate,
+                            Status: 'RECEIVED',
+                            Remark: '-'
+                        });
+                }
+
+                return order;
+            });
     }
 };
