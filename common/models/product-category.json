@@ -1,6 +1,6 @@
 {
-  "name": "Brand",
-  "plural": "Brands",
+  "name": "ProductCategory",
+  "plural": "ProductCategories",
   "base": "BaseModel",
   "idInjection": false,
   "options": {
@@ -18,25 +18,13 @@
     "Name": {
       "type": "string",
       "required": true
-    },
-    "Description": {
-      "type": "string"
-    },
-    "Logo": {
-      "type": "string",
-      "required": true
     }
   },
   "validations": [],
   "relations": {
-    "Products": {
-      "type": "hasMany",
-      "model": "Product",
-      "foreignKey": "BrandCode"
-    },
-    "ProductCategories": {
-      "type": "hasMany",
-      "model": "ProductCategory",
+    "Brand": {
+      "type": "belongsTo",
+      "model": "Brand",
       "foreignKey": "BrandCode"
     }
   },
