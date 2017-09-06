@@ -71,6 +71,14 @@
     "dataSource": "sql-azure",
     "public": true
   },
+  "ProductCategory": {
+    "dataSource": "sql-azure",
+    "public": true
+  },
+  "Product_productCategory": {
+    "dataSource": "sql-azure",
+    "public": true
+  },
   "Kiosk": {
     "dataSource": "sql-azure",
     "public": true
