@@ -14,5 +14,17 @@
     "options": {
       "encrypt": true
     }
+  },
+  "sql-local": {
+    "host": "11.11.1.32",
+    "port": 1433,
+    "database": "tabor-o2o-test",
+    "password": "Admin-pwd",
+    "name": "sql-local",
+    "connector": "mssql",
+    "user": "app",
+    "options": {
+      "encrypt": true
+    }
   }
 }

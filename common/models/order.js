@@ -194,21 +194,27 @@ module.exports = function (Order) {
     }
 
     Order.createDraft = function (data, cb) {
+        var promises = [];
         var order = populateOrder(data);
 
         return (new Order(order))
             .save()
-            .then(function (savedOrder, err) {
+            .then(function (_orderSaved, err) {
                 for (var i = 0, length = order.OrderDetails.length; i < length; i++) {
-                    savedOrder.OrderDetails
-                        .create(order.OrderDetails[i])
-                        .then(function (savedOrderDetail) {
-                            savedOrderDetail.OrderTracks
-                                .create(order.OrderDetails[0].OrderTracks[0]);
-                        });
+                    promises.push(
+                        _orderSaved.OrderDetails
+                            .create(order.OrderDetails[i])
+                            .then(function (_orderSavedDetail) {
+                                _orderSavedDetail.OrderTracks
+                                    .create(order.OrderDetails[0].OrderTracks[0]);
+                            })
+                    );
                 }
 
-                return savedOrder;
+                return Promise.all(promises)
+                    .then(response => {
+                        return _orderSaved;
+                    });
             });
     }
 
@@ -229,7 +235,7 @@ module.exports = function (Order) {
             .then(function (_orderFound) {
                 var promises = [];
 
-                _orderFound.updateAttributes(
+                return _orderFound.updateAttributes(
                     {
                         'IdCard': x.IdCard
                         , 'Name': x.Name
@@ -257,7 +263,7 @@ module.exports = function (Order) {
                             );
                         }
 
-                        Promise.all(promises)
+                        return Promise.all(promises)
                             .then(response => {
                                 return _orderFound;
                             });
@@ -279,29 +285,33 @@ module.exports = function (Order) {
                     Code: data.OrderCode
                 }
             })
-            .then(function (order) {
-                if (order == null)
+            .then(function (_orderFound) {
+                if (_orderFound == null)
                     throw 'Not found / Invalid Status';
 
-                if (order.IsFullyPaid)
+                if (_orderFound.IsFullyPaid)
                     throw 'Order has been paid fully';
 
-                if (order.Status != 'DRAFTED' && order.Status != 'ARRIVED')
+                if (_orderFound.Status != 'DRAFTED' && _orderFound.Status != 'ARRIVED')
                     throw 'Invalid status';
 
-                order.OrderPayments
+                return _orderFound.OrderPayments
                     .create({
                         TransactionDate: currentDate,
                         PaymentType: 'CASH',
                         Amount: data.Amount,
                         PaidAmount: data.PaidAmount,
                         Remark: '-'
-                    });
-                return order;
+                    })
+                .then(res => {
+                    return _orderFound;
+                });
             });
     }
 
     Order.updatePaymentStatus = function (code, cb) {
+        var promises = [];
+
         var currentDate = new Date();
         return Order
             .findOne({
@@ -334,27 +344,34 @@ module.exports = function (Order) {
                 else if (order.Status == 'ARRIVED')
                     nextStatus = 'RECEIVED';
 
-                order.updateAttributes({ Status: nextStatus, IsFullyPaid: isFullyPaid });
+                promises.push(order.updateAttributes({ Status: nextStatus, IsFullyPaid: isFullyPaid }));
 
-                order.OrderDetails.updateAll({}, { 'Status': nextStatus }, function (err, info, count) { });
+                promises.push(order.OrderDetails.updateAll({}, { 'Status': nextStatus }, function (err, info, count) { }));
 
                 for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
-                    order.OrderDetails()[i].OrderTracks
-                        .create({
-                            OrderCode: order.OrderDetails()[i].OrderCode,
-                            OrderDetailCode: order.OrderDetails()[i].Code,
-                            TrackDate: currentDate,
-                            Status: nextStatus,
-                            Remark: '-'
-                        });
+                    promises.push(
+                        order.OrderDetails()[i].OrderTracks
+                            .create({
+                                OrderCode: order.OrderDetails()[i].OrderCode,
+                                OrderDetailCode: order.OrderDetails()[i].Code,
+                                TrackDate: currentDate,
+                                Status: nextStatus,
+                                Remark: '-'
+                            })
+                    );
                 }
 
-                return order;
+                Promise.all(promises)
+                    .then(response => {
+                        return order;
+                    });
 
             });
     }
 
     Order.voidDraft = function (code, cb) {
+        var promises = [];
+
         var currentDate = new Date();
         return Order
             .findOne({
@@ -370,27 +387,37 @@ module.exports = function (Order) {
                     throw 'Not found / Invalid Status';
                 }
 
+                // mesti DRAFTED
                 if (order.Status != 'DRAFTED')
                     throw 'Invalid Status';
 
-                order.updateAttribute('Status', 'VOIDED');
-                order.OrderDetails.updateAll({}, { 'Status': 'VOIDED' }, function (err, info, count) { });
+                promises.push(order.updateAttribute('Status', 'VOIDED'));
+
+                promises.push(order.OrderDetails.updateAll({}, { 'Status': 'VOIDED' }, function (err, info, count) { }));
+
                 for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
-                    order.OrderDetails()[i].OrderTracks
-                        .create({
-                            OrderCode: order.OrderDetails()[i].OrderCode,
-                            OrderDetailCode: order.OrderDetails()[i].Code,
-                            TrackDate: currentDate,
-                            Status: 'VOIDED',
-                            Remark: '-'
-                        });
+                    promises.push(
+                        order.OrderDetails()[i].OrderTracks
+                            .create({
+                                OrderCode: order.OrderDetails()[i].OrderCode,
+                                OrderDetailCode: order.OrderDetails()[i].Code,
+                                TrackDate: currentDate,
+                                Status: 'VOIDED',
+                                Remark: '-'
+                            })
+                    );
                 }
 
-                return order;
+                Promise.all(promises)
+                    .then(response => {
+                        return order;
+                    });
             });
     }
 
     Order.completeOrder = function (code, cb) {
+        var promises = [];
+
         var currentDate = new Date();
         return Order
             .findOne({
@@ -409,20 +436,27 @@ module.exports = function (Order) {
                 if (order.Status != 'ARRIVED')
                     throw 'Invalid Status';
 
-                order.updateAttribute('Status', 'RECEIVED');
-                order.OrderDetails.updateAll({}, { 'Status': 'RECEIVED' }, function (err, info, count) { });
+                promises.push(order.updateAttribute('Status', 'RECEIVED'));
+
+                promises.push(order.OrderDetails.updateAll({}, { 'Status': 'RECEIVED' }, function (err, info, count) { }));
+
                 for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
-                    order.OrderDetails()[i].OrderTracks
-                        .create({
-                            OrderCode: order.OrderDetails()[i].OrderCode,
-                            OrderDetailCode: order.OrderDetails()[i].Code,
-                            TrackDate: currentDate,
-                            Status: 'RECEIVED',
-                            Remark: '-'
-                        });
+                    promises.push(
+                        order.OrderDetails()[i].OrderTracks
+                            .create({
+                                OrderCode: order.OrderDetails()[i].OrderCode,
+                                OrderDetailCode: order.OrderDetails()[i].Code,
+                                TrackDate: currentDate,
+                                Status: 'RECEIVED',
+                                Remark: '-'
+                            })
+                    );
                 }
 
-                return order;
+                Promise.all(promises)
+                    .then(response => {
+                        return order;
+                    });
             });
     }
 };
