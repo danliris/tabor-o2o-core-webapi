@@ -1,0 +1,32 @@
+{
+  "name": "Product_productCategory",
+  "plural": "Product_productCategories",
+  "base": "BaseModel",
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins": {
+    "TimeStamp": {}
+  },
+  "properties": {
+    "ProductCategoryCode": {
+      "type": "string",
+      "required": true
+    },
+    "ProductCode": {
+      "type": "string",
+      "required": true
+    }
+  },
+  "validations": [],
+  "relations": {
+    "Product": {
+      "type": "belongsTo",
+      "model": "Product",
+      "foreignKey": "ProductCode"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

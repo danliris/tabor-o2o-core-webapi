@@ -59,6 +59,11 @@
       "type": "hasMany",
       "model": "ProductDealer",
       "foreignKey": "ProductCode"
+    },
+    "Product_productCategories": {
+      "type": "hasMany",
+      "model": "Product_productCategory",
+      "foreignKey": "ProductCode"
     }
   },
   "acls": [],
