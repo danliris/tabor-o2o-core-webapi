@@ -4,7 +4,7 @@
   "main": "server/server.js",
   "engines": {
     "node": ">=4"
-  },
+  }, 
   "scripts": {
     "lint": "eslint .",
     "start": "node . --no-daemon",
