@@ -4,29 +4,29 @@
   "main": "server/server.js",
   "engines": {
     "node": ">=4"
-  }, 
+  },
   "scripts": {
     "lint": "eslint .",
     "start": "node . --no-daemon",
     "posttest": "npm run lint && nsp check"
   },
   "dependencies": {
-    "combined-stream": "^1.0.5",
-    "compression": "^1.0.3",
-    "cors": "^2.5.2",
-    "delayed-stream": "^1.0.0",
-    "helmet": "^1.3.0",
-    "loopback": "^3.0.0",
-    "loopback-boot": "^2.6.5",
-    "loopback-component-explorer": "^4.0.0",
-    "loopback-connector-mssql": "^2.9.0",
-    "serve-favicon": "^2.0.1",
-    "strong-error-handler": "^2.0.0"
+    "combined-stream": "1.0.5",
+    "compression": "1.0.3",
+    "cors": "2.5.2",
+    "delayed-stream": "1.0.0",
+    "helmet": "1.3.0",
+    "loopback": "3.0.0",
+    "loopback-boot": "2.6.5",
+    "loopback-component-explorer": "4.0.0",
+    "loopback-connector-mssql": "2.9.0",
+    "serve-favicon": "2.0.1",
+    "strong-error-handler": "2.0.0"
   },
   "devDependencies": {
-    "eslint": "^3.17.1",
-    "eslint-config-loopback": "^8.0.0",
-    "nsp": "^2.1.0"
+    "eslint": "3.17.1",
+    "eslint-config-loopback": "8.0.0",
+    "nsp": "2.1.0"
   },
   "repository": {
     "type": "",
