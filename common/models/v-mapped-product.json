@@ -29,6 +29,18 @@
         "Image": {
             "type": "string"
         },
+        "Width": {
+            "type": "number"
+        },
+        "Height": {
+            "type": "number"
+        },
+        "Length": {
+            "type": "number"
+        },
+        "Weight": {
+            "type": "number"
+        },
         "ProductDealerSKU": {
             "type": "string"
         },
@@ -39,6 +51,12 @@
             "type": "number"
         },
         "KioskCode": {
+            "type": "string"
+        },
+        "ProductCategoryCode": {
+            "type": "string"
+        },
+        "ProductCategoryName": {
             "type": "string"
         }
     },
