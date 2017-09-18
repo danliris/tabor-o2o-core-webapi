@@ -1,0 +1,37 @@
+{
+  "name": "OrderDetailDelivery",
+  "plural": "OrderDetailDeliveries",
+  "base": "BaseModel",
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins": {
+    "TimeStamp": {}
+  },
+  "properties": {
+    "OrderDetailCode": {
+      "type": "string",
+      "required": true
+    },
+    "PickUpCode": {
+      "type": "string",
+      "required": true
+    },
+    "PickUpItemCode": {
+      "type": "string",
+      "required": true
+    }
+    
+  },
+  "validations": [],
+  "relations": {
+    "OrderDetail": {
+      "type": "belongsTo",
+      "model": "OrderDetail",
+      "foreignKey": "OrderDetailCode"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

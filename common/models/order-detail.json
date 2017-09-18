@@ -76,6 +76,11 @@
       "type": "hasMany",
       "model": "OrderDetailIMEI",
       "foreignKey": "OrderDetailCode"
+    },
+    "OrderDetailDeliveries": {
+      "type": "hasMany",
+      "model": "OrderDetailDelivery",
+      "foreignKey": "OrderDetailCode"
     }
   },
   "acls": [],
