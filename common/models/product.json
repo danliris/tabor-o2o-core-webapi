@@ -41,6 +41,22 @@
     "Image": {
       "type": "string",
       "required": true
+    },
+    "Weight": {
+      "type": "double",
+      "required": true
+    },
+    "Width": {
+      "type": "double",
+      "required": true
+    },
+    "Height": {
+      "type": "double",
+      "required": true
+    },
+    "Length": {
+      "type": "double",
+      "required": true
     }
   },
   "validations": [],
