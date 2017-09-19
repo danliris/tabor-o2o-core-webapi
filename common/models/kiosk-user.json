@@ -1,0 +1,31 @@
+{
+    "name": "KioskUser",
+    "plural": "KioskUsers",
+    "base": "BaseModel",
+    "idInjection": false,
+    "options": {
+      "validateUpsert": true
+    },
+    "mixins": {
+      "TimeStamp": {}
+    },
+    "properties": {
+      "UserId": {
+        "type": "string"
+      },
+      "KioskCode": {
+        "type": "string"
+      }
+    },
+    "validations": [],
+    "relations": {
+      "Kiosk": {
+        "type": "belongsTo",
+        "model": "Kiosk",
+        "foreignKey": "KioskCode"
+      }
+    },
+    "acls": [],
+    "methods": {}
+  }
+  

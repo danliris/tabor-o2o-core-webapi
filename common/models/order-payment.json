@@ -14,6 +14,10 @@
       "type": "string",
       "required": true
     },
+    "PaymentMethod": {
+      "type": "string",
+      "required": true
+    },
     "PaymentType": {
       "type": "string",
       "required": true

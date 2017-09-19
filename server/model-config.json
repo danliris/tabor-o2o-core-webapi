@@ -59,6 +59,10 @@
     "dataSource": "sql-local",
     "public": true
   },
+  "OrderDetailDelivery": {
+    "dataSource": "sql-azure",
+    "public": true
+  },
   "OrderTrack": {
     "dataSource": "sql-local",
     "public": true
@@ -81,6 +85,10 @@
   },
   "Kiosk": {
     "dataSource": "sql-local",
+    "public": true
+  },
+  "KioskUser": {
+    "dataSource": "sql-azure",
     "public": true
   },
   "KioskProductDealer": {

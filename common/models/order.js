@@ -9,7 +9,10 @@ module.exports = function (Order) {
     });
 
     Order.remoteMethod('updateDraft', {
-        accepts: { arg: 'data', type: 'Order' },
+        accepts: [
+            { arg: 'data', type: 'Order', 'required': true },
+            { arg: 'options', type: 'object', 'http': 'optionsFromRequest' }
+        ],
         http: { path: '/draft', verb: 'put' },
         returns: { arg: 'result', type: 'Order' }
     });
@@ -218,7 +221,7 @@ module.exports = function (Order) {
             });
     }
 
-    Order.updateDraft = function (data, cb) {
+    Order.updateDraft = function (data, options, cb) {
         var x = populateOrderForEdit(data);
 
         return Order
@@ -298,14 +301,15 @@ module.exports = function (Order) {
                 return _orderFound.OrderPayments
                     .create({
                         TransactionDate: currentDate,
-                        PaymentType: 'CASH',
+                        PaymentMethod: 'CASH',
+                        PaymentType: data.PaymentType,
                         Amount: data.Amount,
                         PaidAmount: data.PaidAmount,
                         Remark: '-'
                     })
-                .then(res => {
-                    return _orderFound;
-                });
+                    .then(res => {
+                        return _orderFound;
+                    });
             });
     }
 
@@ -361,7 +365,7 @@ module.exports = function (Order) {
                     );
                 }
 
-                Promise.all(promises)
+                return Promise.all(promises)
                     .then(response => {
                         return order;
                     });
@@ -459,4 +463,5 @@ module.exports = function (Order) {
                     });
             });
     }
+
 };
