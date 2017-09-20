@@ -14,97 +14,97 @@
     ]
   },
   "User": {
-    "dataSource": "sqlserver"
+    "dataSource": "db"
   },
   "AccessToken": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": false
   },
   "ACL": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": false
   },
   "RoleMapping": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": false,
     "options": {
       "strictObjectIDCoercion": true
     }
   },
   "Role": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": false
   },
   "Product": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "Brand": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "Dealer": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "Order": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "OrderDetail": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "OrderDetailIMEI": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "OrderDetailDelivery": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "OrderTrack": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "OrderPayment": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "ProductDealer": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "ProductCategory": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "Product_productCategory": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "Kiosk": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "KioskUser": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "KioskProductDealer": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "DealerUser": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "Configuration": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true
   },
   "VMappedProduct": {
-    "dataSource": "sqlserver",
+    "dataSource": "db",
     "public": true,
     "options": {
       "remoting": {
