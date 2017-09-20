@@ -1,18 +1,6 @@
 {
-  "db": {
+  "db" : {
     "name": "db",
-    "connector": "memory"
-  },
-  "sql-azure": {
-    "host": "efrata.database.windows.net",
-    "port": 1433,
-    "database": "tabor-o2o-dev",
-    "password": "Standar123.",
-    "name": "sql-azure",
-    "connector": "mssql",
-    "user": "adminbateeq",
-    "options": {
-      "encrypt": true
-    }
+    "connector": "mssql"
   }
 }
