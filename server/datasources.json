@@ -3,8 +3,8 @@
     "name": "db",
     "connector": "memory"
   },
-  "sql-server" : {
-    "name": "sql-server",
+  "sqlserver" : {
+    "name": "sqlserver",
     "connector": "mssql"
   }
 }
