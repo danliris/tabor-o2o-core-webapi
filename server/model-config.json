@@ -14,97 +14,97 @@
     ]
   },
   "User": {
-    "dataSource": "sql-azure"
+    "dataSource": "db"
   },
   "AccessToken": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": false
   },
   "ACL": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": false
   },
   "RoleMapping": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": false,
     "options": {
       "strictObjectIDCoercion": true
     }
   },
   "Role": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": false
   },
   "Product": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "Brand": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "Dealer": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "Order": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "OrderDetail": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "OrderDetailIMEI": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "OrderDetailDelivery": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "OrderTrack": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "OrderPayment": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "ProductDealer": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "ProductCategory": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "Product_productCategory": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "Kiosk": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "KioskUser": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "KioskProductDealer": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "DealerUser": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "Configuration": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "VMappedProduct": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true,
     "options": {
       "remoting": {
