@@ -1,6 +1,6 @@
 {
-  "sqlserver" : {
-    "name": "sqlserver",
+  "db" : {
+    "name": "db",
     "connector": "mssql"
   }
 }
