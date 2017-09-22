@@ -21,6 +21,10 @@
     "PickUpItemCode": {
       "type": "string",
       "required": true
+    },
+    "UnlockCode": {
+      "type": "string",
+      "required": true
     }
     
   },
