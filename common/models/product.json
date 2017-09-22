@@ -43,19 +43,19 @@
       "required": true
     },
     "Weight": {
-      "type": "double",
+      "type": "number",
       "required": true
     },
     "Width": {
-      "type": "double",
+      "type": "number",
       "required": true
     },
     "Height": {
-      "type": "double",
+      "type": "number",
       "required": true
     },
     "Length": {
-      "type": "double",
+      "type": "number",
       "required": true
     }
   },
