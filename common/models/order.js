@@ -3,16 +3,13 @@
 module.exports = function (Order) {
 
     Order.remoteMethod('createDraft', {
-        accepts: { arg: 'data', type: 'Order' },
+        accepts: { arg: 'data', type: 'object' },
         http: { path: '/draft', verb: 'post' },
         returns: { arg: 'result', type: 'Order' }
     });
 
     Order.remoteMethod('updateDraft', {
-        accepts: [
-            { arg: 'data', type: 'Order', 'required': true },
-            { arg: 'options', type: 'object', 'http': 'optionsFromRequest' }
-        ],
+        accepts: { arg: 'data', type: 'object', 'required': true },
         http: { path: '/draft', verb: 'put' },
         returns: { arg: 'result', type: 'Order' }
     });
@@ -77,202 +74,152 @@ module.exports = function (Order) {
         return Order.app.models.VMappedProduct
             .findOne({
                 where: {
-                    Code: detail.ProductCode,
-                    DealerCode: detail.DealerCode
+                    Code: productCode,
+                    DealerCode: dealerCode
                 }
             });
     }
 
-    function populateOrderForEdit(data) {
-        var order = {};
-        order.Code = data.Code;
-        order.KioskCode = data.KioskCode;
-        order.IdCard = data.IdCard;
-
-        order.Name = data.Name;
-        order.Email = data.Email;
-        order.RequestDate = data.RequestDate;
-        order.Latitude = data.Latitude;
-        order.Longitude = data.Longitude;
-        order.SelfPickUp = data.SelfPickUp;
-        order.Destination = data.Destination;
-        order.Phone = data.Phone;
-        order.PIN = data.PIN;
-        order.DP = 0; // itung
-        order.TotalQuantity = sum(data.OrderDetails(), 'Quantity');
-        order.TotalShippingFee = 0; // itung
-        order.TotalPrice = 0; // itung
-        order.IsFullyPaid = false;
-        order.Status = data.Status;
-
-        order.OrderDetails = [];
-
-        for (var i = 0; i < data.OrderDetails().length; i++) {
-            var detail = data.OrderDetails()[i];
-
-            var orderDetail = {};
-            orderDetail.Code = detail.Code;
-            orderDetail.OrderCode = detail.OrderCode;
-            orderDetail.ProductCode = detail.ProductCode;
-            orderDetail.DealerCode = detail.DealerCode;
-            orderDetail.Quantity = detail.Quantity;
-            orderDetail.ShippingFee = 0;
-            orderDetail.IsRetur = false;
-            orderDetail.Status = detail.Status;
-            orderDetail.Price = detail.Price;
-            orderDetail.DPNominal = detail.DPNominal;
-            orderDetail.RequestDate = detail.RequestDate;
-
-            order.OrderDetails.push(orderDetail);
-
-            order.TotalShippingFee += orderDetail.ShippingFee;
-            order.DP += orderDetail.DPNominal * orderDetail.Quantity;
-            order.TotalPrice += orderDetail.Price * orderDetail.Quantity;
+    function getVMappedProductsByDetail(Order, data) {
+        var promises = [];
+        for (var i = 0, length = data.OrderDetails.length; i < length; i++) {
+            var detail = data.OrderDetails[i];
+            promises.push(getVMappedProduct(Order, detail.ProductCode, detail.DealerCode));
         }
 
-        return order;
+        return Promise.all(promises)
+            .then(res => {
+                return res;
+            });
     }
 
-    function populateOrder(data) {
-        var status = 'DRAFTED';
-        var currentDate = new Date();
-        var idGenerator = new IDGenerator();
-        var orderCode = idGenerator.generate();
+    function populateData(Order, data, isUpdate = false) {
+        return getVMappedProductsByDetail(Order, data)
+            .then(res => {
+                var products = res;
 
-        var order = {};
-        order.Code = orderCode;
-        order.KioskCode = data.KioskCode;
-        order.IdCard = data.IdCard;
-        order.Name = data.Name;
-        order.Email = data.Email;
-        order.RequestDate = currentDate;
-        order.Latitude = data.Latitude;
-        order.Longitude = data.Longitude;
-        order.SelfPickUp = data.SelfPickUp;
-        order.Destination = data.Destination;
-        order.Phone = data.Phone;
-        order.PIN = generatePIN();
-        order.DP = 0; // itung
-        order.TotalQuantity = sum(data.OrderDetails(), 'Quantity');
-        order.TotalShippingFee = 0; // itung
-        order.TotalPrice = 0; // itung
-        order.IsFullyPaid = false;
-        order.Status = status;
-        order.OrderDetails = [];
+                var status = 'DRAFTED',
+                    currentDate = new Date(),
+                    idGenerator = new IDGenerator();
 
+                var order = {
+                    Code: !isUpdate ? idGenerator.generate() : data.Code,
+                    KioskCode: data.KioskCode,
+                    IdCard: data.IdCard,
+                    Name: data.Name,
+                    Email: data.Email,
+                    RequestDate: currentDate,
+                    Latitude: 0,
+                    Longitude: 0,
+                    SelfPickUp: data.SelfPickUp,
+                    Address: data.Address,
+                    Phone: data.Phone,
+                    PIN: !isUpdate ? generatePIN() : data.PIN,
+                    DP: 0, // calculate later
+                    TotalQuantity: 0, // calculate later
+                    TotalPrice: 0, // calculate later
+                    TotalWeight: 0, // calcluate later
+                    ShippingDestination: data.ShippingDestination,
+                    ShippingProductCode: data.ShippingProductCode,
+                    ShippingDueDay: data.ShippingDueDay,
+                    TotalShippingFee: data.TotalShippingFee, // calculate later
+                    IsFullyPaid: false,
+                    Status: status,
+                    OrderDetails: []
+                };
 
-        for (var i = 0; i < data.OrderDetails().length; i++) {
-            var detail = data.OrderDetails()[i];
+                for (var i = 0, length = data.OrderDetails.length; i < length; i++) {
+                    var detail = data.OrderDetails[i],
+                        product = products.find(x =>
+                            x.Code == detail.ProductCode &&
+                            x.DealerCode == detail.DealerCode);
 
-            var orderDetail = {};
-            orderDetail.Code = idGenerator.generate();
-            orderDetail.OrderCode = orderCode;
-            orderDetail.ProductCode = detail.ProductCode;
-            orderDetail.DealerCode = detail.DealerCode;
-            orderDetail.Quantity = detail.Quantity;
-            orderDetail.ShippingFee = 0;
-            orderDetail.IsRetur = false;
-            orderDetail.Status = status;
-            orderDetail.Price = detail.Price;
-            orderDetail.DPNominal = detail.DPNominal;
-            orderDetail.RequestDate = currentDate;
+                    var orderDetail = {
+                        Code: !isUpdate ? idGenerator.generate() : detail.Code,
+                        OrderCode: order.Code,
+                        ProductCode: detail.ProductCode,
+                        DealerCode: detail.DealerCode,
+                        Quantity: detail.Quantity,
+                        ShippingFee: 0, // calculate later
+                        IsRetur: false,
+                        Status: status,
+                        Price: product.Price * detail.Quantity,
+                        DPNominal: (product.DP / 100) * product.Price * detail.Quantity,
+                        Weight: product.Weight * detail.Quantity,
+                        RequestDate: order.RequestDate,
+                        OrderTracks: []
+                    };
 
-            orderDetail.OrderTracks = [];
-            orderDetail.OrderTracks.push({
-                OrderCode: orderDetail.OrderCode,
-                OrderDetailCode: orderDetail.Code,
-                TrackDate: currentDate,
-                Status: status,
-                Remark: ''
+                    // add track
+                    if (!isUpdate) {
+                        var orderTrack = {
+                            OrderCode: orderDetail.OrderCode,
+                            OrderDetailCode: orderDetail.Code,
+                            TrackDate: currentDate,
+                            Status: status,
+                            Remark: ''
+                        };
+
+                        orderDetail.OrderTracks.push(orderTrack);
+                    }
+
+                    // update header
+                    order.OrderDetails.push(orderDetail);
+
+                    order.TotalWeight += orderDetail.Weight;
+                    order.TotalQuantity += orderDetail.Quantity;
+                    order.TotalPrice += orderDetail.Price;
+                    order.DP += orderDetail.DPNominal;
+                }
+
+                return order;
             });
 
-            order.OrderDetails.push(orderDetail);
-
-            order.TotalShippingFee += orderDetail.ShippingFee;
-            order.DP += orderDetail.DPNominal * orderDetail.Quantity;
-            order.TotalPrice += orderDetail.Price * orderDetail.Quantity;
-        }
-
-        return order;
     }
 
     Order.createDraft = function (data, cb) {
         var promises = [];
-        var order = populateOrder(data);
-
-        return (new Order(order))
-            .save()
-            .then(function (_orderSaved, err) {
-                for (var i = 0, length = order.OrderDetails.length; i < length; i++) {
-                    promises.push(
-                        _orderSaved.OrderDetails
-                            .create(order.OrderDetails[i])
-                            .then(function (_orderSavedDetail) {
-                                _orderSavedDetail.OrderTracks
-                                    .create(order.OrderDetails[0].OrderTracks[0]);
-                            })
-                    );
-                }
-
-                return Promise.all(promises)
-                    .then(response => {
-                        return _orderSaved;
-                    });
-            });
-    }
-
-    Order.updateDraft = function (data, options, cb) {
-        var x = populateOrderForEdit(data);
-
-        return Order
-            .findOne({
-                include: [
-                    'OrderDetails'
-                    , 'OrderPayments'
-                ],
-                where: {
-                    Code: x.Code
-                    , Status: 'DRAFTED'
-                }
-            })
-            .then(function (_orderFound) {
-                var promises = [];
-
-                return _orderFound.updateAttributes(
-                    {
-                        'IdCard': x.IdCard
-                        , 'Name': x.Name
-                        , 'Email': x.Email
-                        , 'SelfPickUp': x.SelfPickUp
-                        , 'Destination': x.Destination
-                        , 'Phone': x.Phone
-                        , 'DP': x.DP
-                        , 'TotalQuantity': x.TotalQuantity
-                        , 'TotalShippingFee': x.TotalShippingFee
-                        , 'TotalPrice': x.TotalPrice
-                        , 'IsFullyPaid': x.IsFullyPaid
-                    }, function (err, _orderUpdated) {
-                        for (var i = 0, length = x.OrderDetails.length; i < length; i++) {
-                            var detail = x.OrderDetails[i];
-
+        return populateData(Order, data)
+            .then(order => {
+                return (new Order(order))
+                    .save()
+                    .then((_orderSaved, err) => {
+                        for (var i = 0, length = order.OrderDetails.length; i < length; i++) {
                             promises.push(
-                                _orderUpdated.OrderDetails
-                                    .updateById(detail.Code, {
-                                        'Quantity': detail.Quantity,
-                                        'Price': detail.Price,
-                                        'ShippingFee': detail.ShippingFee,
-                                        'DPNominal': detail.DPNominal
+                                _orderSaved.OrderDetails
+                                    .create(order.OrderDetails[i])
+                                    .then((_orderSavedDetail) => {
+                                        _orderSavedDetail.OrderTracks
+                                            .create(order.OrderDetails[0].OrderTracks[0]);
                                     })
                             );
                         }
 
                         return Promise.all(promises)
                             .then(response => {
-                                return _orderFound;
+                                return _orderSaved;
                             });
                     });
             });
+    }
 
+    Order.updateDraft = function (data, cb) {
+        var promises = [];
+
+        return populateData(Order, data, true)
+            .then(order => {
+                return Order.upsert(order)
+                    .then((_orderSaved, err) => {
+                        for (var i = 0, length = order.OrderDetails.length; i < length; i++) {
+                            promises.push(Order.app.models.OrderDetail.upsert(order.OrderDetails[i]));
+                        }
+
+                        return Promise.all(promises)
+                            .then(response => {
+                                return _orderSaved;
+                            });
+                    });
+            });
     }
 
     Order.payment = function (data, cb) {
@@ -420,7 +367,8 @@ module.exports = function (Order) {
     }
 
     Order.completeOrder = function (code, cb) {
-        var promises = [];
+        var promises = [],
+            status = 'COMPLETED';
 
         var currentDate = new Date();
         return Order
@@ -440,9 +388,9 @@ module.exports = function (Order) {
                 if (order.Status != 'ARRIVED')
                     throw 'Invalid Status';
 
-                promises.push(order.updateAttribute('Status', 'RECEIVED'));
+                promises.push(order.updateAttribute('Status', status));
 
-                promises.push(order.OrderDetails.updateAll({}, { 'Status': 'RECEIVED' }, function (err, info, count) { }));
+                promises.push(order.OrderDetails.updateAll({}, { 'Status': status }, function (err, info, count) { }));
 
                 for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
                     promises.push(
@@ -451,7 +399,7 @@ module.exports = function (Order) {
                                 OrderCode: order.OrderDetails()[i].OrderCode,
                                 OrderDetailCode: order.OrderDetails()[i].Code,
                                 TrackDate: currentDate,
-                                Status: 'RECEIVED',
+                                Status: status,
                                 Remark: '-'
                             })
                     );
