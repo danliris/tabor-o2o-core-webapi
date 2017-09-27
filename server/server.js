@@ -4,6 +4,7 @@ var loopback = require('loopback');
 var boot = require('loopback-boot');
 
 var app = module.exports = loopback();
+app.loopback.User.settings.acls = require('./user-acls.json');
 
 app.start = function() {
   // start the web server
