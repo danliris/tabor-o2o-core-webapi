@@ -26,6 +26,11 @@
       "type": "belongsTo",
       "model": "Brand",
       "foreignKey": "BrandCode"
+    },
+    "ProductCategories": {
+      "type": "hasMany",
+      "model": "Product_ProductCategory",
+      "foreignKey": "Code"
     }
   },
   "acls": [],
