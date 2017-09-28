@@ -25,8 +25,14 @@
       "type": "belongsTo",
       "model": "Product",
       "foreignKey": "ProductCode"
+    },
+    "ProductCategory": {
+      "type": "belongsTo",
+      "model": "ProductCategory",
+      "foreignKey": "ProductCategoryCode"
     }
   },
+  
   "acls": [],
   "methods": {}
 }

@@ -39,7 +39,7 @@
     "SelfPickUp": {
       "type": "boolean"
     },
-    "Destination": {
+    "Address": {
       "type": "string"
     },
     "Phone": {
@@ -52,6 +52,18 @@
       "type": "number"
     },
     "TotalQuantity": {
+      "type": "number"
+    },
+    "ShippingDestination": {
+      "type": "string"
+    },
+    "ShippingProductCode": {
+      "type": "string"
+    },
+    "TotalWeight": {
+      "type": "number"
+    },
+    "ShippingDueDay": {
       "type": "number"
     },
     "TotalShippingFee": {
