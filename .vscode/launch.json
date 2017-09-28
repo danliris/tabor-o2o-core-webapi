@@ -8,7 +8,15 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceRoot}\\server\\server.js"
+            "program": "${workspaceRoot}\\server\\server.js",
+            "env": {
+                "NODE_ENV": "staging",
+                "DB_HOST": "11.11.1.32",
+                "DB_PORT": "1433",
+                "DB_NAME": "tabor-o2o-test",
+                "DB_PASSWORD": "Admin-pwd",
+                "DB_USER": "app"
+            }
         }
     ]
 }
