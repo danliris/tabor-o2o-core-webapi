@@ -69,11 +69,5 @@
         "principalId": "admin",
         "permission": "ALLOW",
         "property": "updateAll"
-    },
-    {
-        "principalType": "USER",
-        "principalId": "1",
-        "permission": "ALLOW",
-        "property": "count"
     }
 ]
