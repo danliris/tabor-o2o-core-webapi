@@ -20,11 +20,11 @@ module.exports = function (Order) {
         returns: { arg: 'result', type: 'Order' }
     });
 
-    Order.remoteMethod('updatePaymentStatus', {
-        accepts: { arg: 'code', type: 'string' },
-        http: { path: '/payment-status', verb: 'post' },
-        returns: { arg: 'result', type: 'Order' }
-    });
+    // Order.remoteMethod('updatePaymentStatus', {
+    //     accepts: { arg: 'code', type: 'string' },
+    //     http: { path: '/payment-status', verb: 'post' },
+    //     returns: { arg: 'result', type: 'Order' }
+    // });
 
     Order.remoteMethod('completeOrder', {
         accepts: { arg: 'code', type: 'string' },
@@ -37,6 +37,240 @@ module.exports = function (Order) {
         http: { path: '/void', verb: 'post' },
         returns: { arg: 'result', type: 'Order' }
     });
+
+    Order.remoteMethod('arriveOrder', {
+        accepts: { arg: 'code', type: 'string' },
+        http: { path: '/arrive', verb: 'post' },
+        returns: { arg: 'result', type: 'Order' }
+    });
+
+    Order.createDraft = function (data, cb) {
+        var promises = [];
+        return populateData(Order, data)
+            .then(order => {
+                return (new Order(order))
+                    .save()
+                    .then((_orderSaved, err) => {
+                        for (var i = 0, length = order.OrderDetails.length; i < length; i++) {
+                            promises.push(
+                                _orderSaved.OrderDetails
+                                    .create(order.OrderDetails[i])
+                                    .then((_orderSavedDetail) => {
+                                        _orderSavedDetail.OrderTracks
+                                            .create(order.OrderDetails[0].OrderTracks[0]);
+                                    })
+                            );
+                        }
+
+                        return Promise.all(promises)
+                            .then(response => {
+                                return _orderSaved;
+                            });
+                    });
+            });
+    }
+
+    Order.updateDraft = function (data, cb) {
+        var promises = [];
+
+        return populateData(Order, data, true)
+            .then(order => {
+                return Order.upsert(order)
+                    .then((_orderSaved, err) => {
+                        for (var i = 0, length = order.OrderDetails.length; i < length; i++) {
+                            promises.push(Order.app.models.OrderDetail.upsert(order.OrderDetails[i]));
+                        }
+
+                        return Promise.all(promises)
+                            .then(response => {
+                                return _orderSaved;
+                            });
+                    });
+            });
+    }
+
+    Order.payment = function (data, cb) {
+        // kalo out of stock
+        return getOrderWithDetails(Order, data.OrderCode)
+            .then(order => {
+                if (order == null)
+                    throw 'Not found / Invalid Status';
+
+                if (order.IsFullyPaid)
+                    throw 'Order has been fully paid';
+
+                if (order.Status != 'DRAFTED' && order.Status != 'ARRIVED')
+                    throw 'Invalid status';
+
+                return order.OrderPayments
+                    .create({
+                        TransactionDate: new Date(),
+                        PaymentMethod: 'CASH',
+                        PaymentType: data.PaymentType,
+                        Amount: data.Amount,
+                        PaidAmount: data.PaidAmount,
+                        Remark: '-'
+                    })
+                    .then(orderPayment => {
+                        var promises = [];
+                        promises.push(updatePaymentStatus(order));
+                        // update stock
+                        promises.push(updateProductStock(Order, order));
+
+                        return Promise.all(promises)
+                            .then(res => {
+                                return getOrderWithDetails(Order, order.Code)
+                                    .then(order => {
+                                        return order;
+                                    });
+                            });
+                    });
+            })
+    }
+
+    // Order.updatePaymentStatus = function (code, cb) {
+    //     return getOrderWithDetails(Order, code)
+    //         .then(order => {
+    //             if (order == null) {
+    //                 throw 'Not found / Invalid Status';
+    //             }
+
+    //             if (order.Status != 'DRAFTED' && order.Status != 'ARRIVED')
+    //                 throw `Invalid Status: ${order.Status}`;
+
+    //             var totalPaidAmount = order.OrderPayments().reduce(function (a, b) {
+    //                 return b.Amount + a;
+    //             }, 0);
+
+    //             // lunas?
+    //             var isFullyPaid = totalPaidAmount >= order.TotalPrice + order.TotalShippingFee;
+
+    //             var nextStatus = '';
+    //             if (order.Status == 'DRAFTED')
+    //                 nextStatus = 'REQUESTED';
+    //             else if (order.Status == 'ARRIVED')
+    //                 nextStatus = 'RECEIVED';
+
+    //             return updateOrderStatus(order, nextStatus);
+    //         });
+    // }
+
+    Order.voidDraft = function (code, cb) {
+        return getOrderWithDetails(Order, code)
+            .then(order => {
+                if (order == null)
+                    throw 'Not found';
+
+                if (order.Status != 'DRAFTED')
+                    throw `Invalid Status: ${order.Status}`;
+
+                return updateOrderStatus(order, 'VOID');
+            });
+    }
+
+    Order.arriveOrder = function (code, cb) {
+        return getOrderWithDetails(Order, code)
+            .then(order => {
+                if (order == null)
+                    throw 'Not found';
+
+                if (order.Status != 'DELIVERED')
+                    throw `Invalid Status: ${order.Status}`;
+
+                return updateOrderStatus(order, 'ARRIVED');
+            });
+    }
+
+    Order.completeOrder = function (code, cb) {
+        return getOrderWithDetails(Order, code)
+            .then(order => {
+                if (order == null)
+                    throw 'Not found';
+
+                if (order.Status != 'ARRIVED')
+                    throw `Invalid Status: ${order.Status}`;
+
+                return updateOrderStatus(order, 'COMPLETED');
+            });
+    }
+
+    function updateProductStock(Order, order) {
+        var promises = [];
+        for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
+            var detail = order.OrderDetails()[i];
+            promises.push(
+                Order.app.models.ProductDealer.findOne({
+                    where: {
+                        ProductCode: detail.ProductCode,
+                        DealerCode: detail.DealerCode
+                    }
+                })
+                    .then(product => {
+                        product.Quantity -= detail.Quantity;
+                        product.save();
+                    })
+            );
+        }
+        Promise.all(promises)
+            .then(res => {
+
+            });
+    }
+
+    function updatePaymentStatus(order) {
+        var totalPaidAmount = order.OrderPayments().reduce(function (a, b) {
+            return b.Amount + a;
+        }, 0);
+
+        // lunas?
+        var isFullyPaid = totalPaidAmount >= order.TotalPrice + order.TotalShippingFee;
+
+        return order.updateAttribute('IsFullyPaid', isFullyPaid)
+            .then(res => {
+
+                var nextStatus = '';
+                if (order.Status == 'DRAFTED')
+                    nextStatus = 'REQUESTED';
+                // else if (order.Status == 'ARRIVED')
+                //     nextStatus = 'RECEIVED';
+
+                return updateOrderStatus(order, nextStatus);
+            });
+    }
+
+    function getOrderWithDetails(Order, code) {
+        return Order.findOne({
+            include: ['OrderDetails', 'OrderPayments'],
+            where: { Code: code }
+        });
+    }
+
+    function updateOrderStatus(order, status) {
+        var currentDate = new Date();
+        var promises = [];
+
+        promises.push(order.updateAttribute('Status', status));
+
+        promises.push(order.OrderDetails.updateAll({}, { 'Status': status }, function (err, info, count) { }));
+
+        for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
+            promises.push(
+                order.OrderDetails()[i].OrderTracks
+                    .create({
+                        OrderCode: order.OrderDetails()[i].OrderCode,
+                        OrderDetailCode: order.OrderDetails()[i].Code,
+                        TrackDate: currentDate,
+                        Status: status,
+                        Remark: '-'
+                    })
+            );
+        }
+
+        return Promise.all(promises)
+            .then(res => {
+                return res[0];
+            });
+    }
 
     function IDGenerator() {
         this.length = 8;
@@ -58,12 +292,6 @@ module.exports = function (Order) {
 
             return id;
         }
-    }
-
-    function sum(items, prop) {
-        return items.reduce(function (a, b) {
-            return a + b[prop];
-        }, 0);
     }
 
     function generatePIN() {
@@ -134,6 +362,9 @@ module.exports = function (Order) {
                             x.Code == detail.ProductCode &&
                             x.DealerCode == detail.DealerCode);
 
+                    if (detail.Quantity > product.Quantity)
+                        throw 'Insufficient stocks.';
+
                     var orderDetail = {
                         Code: !isUpdate ? idGenerator.generate() : detail.Code,
                         OrderCode: order.Code,
@@ -176,240 +407,4 @@ module.exports = function (Order) {
             });
 
     }
-
-    Order.createDraft = function (data, cb) {
-        var promises = [];
-        return populateData(Order, data)
-            .then(order => {
-                return (new Order(order))
-                    .save()
-                    .then((_orderSaved, err) => {
-                        for (var i = 0, length = order.OrderDetails.length; i < length; i++) {
-                            promises.push(
-                                _orderSaved.OrderDetails
-                                    .create(order.OrderDetails[i])
-                                    .then((_orderSavedDetail) => {
-                                        _orderSavedDetail.OrderTracks
-                                            .create(order.OrderDetails[0].OrderTracks[0]);
-                                    })
-                            );
-                        }
-
-                        return Promise.all(promises)
-                            .then(response => {
-                                return _orderSaved;
-                            });
-                    });
-            });
-    }
-
-    Order.updateDraft = function (data, cb) {
-        var promises = [];
-
-        return populateData(Order, data, true)
-            .then(order => {
-                return Order.upsert(order)
-                    .then((_orderSaved, err) => {
-                        for (var i = 0, length = order.OrderDetails.length; i < length; i++) {
-                            promises.push(Order.app.models.OrderDetail.upsert(order.OrderDetails[i]));
-                        }
-
-                        return Promise.all(promises)
-                            .then(response => {
-                                return _orderSaved;
-                            });
-                    });
-            });
-    }
-
-    Order.payment = function (data, cb) {
-        var currentDate = new Date();
-        // mesti ambil order yang belum lunas
-        return Order
-            .findOne({
-                include: [
-                    'OrderDetails'
-                    , 'OrderPayments'
-                ],
-                where: {
-                    Code: data.OrderCode
-                }
-            })
-            .then(function (_orderFound) {
-                if (_orderFound == null)
-                    throw 'Not found / Invalid Status';
-
-                if (_orderFound.IsFullyPaid)
-                    throw 'Order has been paid fully';
-
-                if (_orderFound.Status != 'DRAFTED' && _orderFound.Status != 'ARRIVED')
-                    throw 'Invalid status';
-
-                return _orderFound.OrderPayments
-                    .create({
-                        TransactionDate: currentDate,
-                        PaymentMethod: 'CASH',
-                        PaymentType: data.PaymentType,
-                        Amount: data.Amount,
-                        PaidAmount: data.PaidAmount,
-                        Remark: '-'
-                    })
-                    .then(res => {
-                        return _orderFound;
-                    });
-            });
-    }
-
-    Order.updatePaymentStatus = function (code, cb) {
-        var promises = [];
-
-        var currentDate = new Date();
-        return Order
-            .findOne({
-                include: [
-                    'OrderDetails'
-                    , 'OrderPayments'
-                ],
-                where: {
-                    Code: code
-                }
-            })
-            .then(function (order) {
-                if (order == null) {
-                    throw 'Not found / Invalid Status';
-                }
-
-                if (order.Status != 'DRAFTED' && order.Status != 'ARRIVED')
-                    throw 'Invalid Status';
-
-                var totalPaidAmount = order.OrderPayments().reduce(function (a, b) {
-                    return b.Amount + a;
-                }, 0);
-
-                // lunas?
-                var isFullyPaid = totalPaidAmount >= order.TotalPrice + order.TotalShippingFee;
-
-                var nextStatus = '';
-                if (order.Status == 'DRAFTED')
-                    nextStatus = 'REQUESTED';
-                else if (order.Status == 'ARRIVED')
-                    nextStatus = 'RECEIVED';
-
-                promises.push(order.updateAttributes({ Status: nextStatus, IsFullyPaid: isFullyPaid }));
-
-                promises.push(order.OrderDetails.updateAll({}, { 'Status': nextStatus }, function (err, info, count) { }));
-
-                for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
-                    promises.push(
-                        order.OrderDetails()[i].OrderTracks
-                            .create({
-                                OrderCode: order.OrderDetails()[i].OrderCode,
-                                OrderDetailCode: order.OrderDetails()[i].Code,
-                                TrackDate: currentDate,
-                                Status: nextStatus,
-                                Remark: '-'
-                            })
-                    );
-                }
-
-                return Promise.all(promises)
-                    .then(response => {
-                        return order;
-                    });
-
-            });
-    }
-
-    Order.voidDraft = function (code, cb) {
-        var promises = [];
-
-        var currentDate = new Date();
-        return Order
-            .findOne({
-                include: [
-                    'OrderDetails'
-                ],
-                where: {
-                    Code: code
-                }
-            })
-            .then(function (order) {
-                if (order == null) {
-                    throw 'Not found / Invalid Status';
-                }
-
-                // mesti DRAFTED
-                if (order.Status != 'DRAFTED')
-                    throw 'Invalid Status';
-
-                promises.push(order.updateAttribute('Status', 'VOIDED'));
-
-                promises.push(order.OrderDetails.updateAll({}, { 'Status': 'VOIDED' }, function (err, info, count) { }));
-
-                for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
-                    promises.push(
-                        order.OrderDetails()[i].OrderTracks
-                            .create({
-                                OrderCode: order.OrderDetails()[i].OrderCode,
-                                OrderDetailCode: order.OrderDetails()[i].Code,
-                                TrackDate: currentDate,
-                                Status: 'VOIDED',
-                                Remark: '-'
-                            })
-                    );
-                }
-
-                Promise.all(promises)
-                    .then(response => {
-                        return order;
-                    });
-            });
-    }
-
-    Order.completeOrder = function (code, cb) {
-        var promises = [],
-            status = 'COMPLETED';
-
-        var currentDate = new Date();
-        return Order
-            .findOne({
-                include: [
-                    'OrderDetails'
-                ],
-                where: {
-                    Code: code
-                }
-            })
-            .then(function (order) {
-                if (order == null) {
-                    throw 'Not found / Invalid Status';
-                }
-
-                if (order.Status != 'ARRIVED')
-                    throw 'Invalid Status';
-
-                promises.push(order.updateAttribute('Status', status));
-
-                promises.push(order.OrderDetails.updateAll({}, { 'Status': status }, function (err, info, count) { }));
-
-                for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
-                    promises.push(
-                        order.OrderDetails()[i].OrderTracks
-                            .create({
-                                OrderCode: order.OrderDetails()[i].OrderCode,
-                                OrderDetailCode: order.OrderDetails()[i].Code,
-                                TrackDate: currentDate,
-                                Status: status,
-                                Remark: '-'
-                            })
-                    );
-                }
-
-                Promise.all(promises)
-                    .then(response => {
-                        return order;
-                    });
-            });
-    }
-
 };
