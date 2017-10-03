@@ -35,9 +35,11 @@
       "type": "number",
       "required": true
     },
+    "Weight": {
+      "type": "number"
+    },
     "ShippingFee": {
-      "type": "number",
-      "required": true
+      "type": "number"
     },
     "DPNominal": {
       "type": "number"

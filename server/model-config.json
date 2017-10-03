@@ -119,6 +119,38 @@
       }
     }
   },
+  "VProductDealer": {
+    "dataSource": "db",
+    "public": true,
+    "options": {
+      "remoting": {
+        "sharedMethods": {
+          "*": true,
+          "find": true,
+          "findById": true,
+          "findOne": false,
+          "count": true,
+          "exists": true
+        }
+      }
+    }
+  },
+  "VKioskProductDealer": {
+    "dataSource": "db",
+    "public": true,
+    "options": {
+      "remoting": {
+        "sharedMethods": {
+          "*": true,
+          "find": true,
+          "findById": true,
+          "findOne": false,
+          "count": true,
+          "exists": true
+        }
+      }
+    }
+  },
   "container": {
     "dataSource": "storage",
     "public": true

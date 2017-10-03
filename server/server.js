@@ -5,7 +5,7 @@ var boot = require('loopback-boot');
 var path = require("path");
 
 var app = module.exports = loopback();
-app.loopback.User.settings.acls = require('./user-acls.json');
+// app.loopback.User.settings.acls = require('./user-acls.json');
 
 // var ds = loopback.createDataSource({
 //     connector: require('loopback-component-storage'),
