@@ -119,10 +119,12 @@ module.exports = function (Order) {
 
                         return Promise.all(promises)
                             .then(res => {
-                                return getOrderWithDetails(Order, order.Code)
-                                    .then(order => {
-                                        return order;
-                                    });
+                                // return getOrderWithDetails(Order, order.Code)
+                                //     .then(order => {
+                                //         return order;
+                                //     });
+
+                                return order;
                             });
                     });
             })
@@ -164,7 +166,7 @@ module.exports = function (Order) {
                 if (order.Status != 'DRAFTED')
                     throw `Invalid Status: ${order.Status}`;
 
-                return updateOrderStatus(order, 'VOID');
+                return updateOrderStatus(order, 'VOIDED');
             });
     }
 
@@ -219,7 +221,7 @@ module.exports = function (Order) {
 
     function updatePaymentStatus(order) {
         var totalPaidAmount = order.OrderPayments().reduce(function (a, b) {
-            return b.Amount + a;
+            return b.PaidAmount + a;
         }, 0);
 
         // lunas?
@@ -227,8 +229,7 @@ module.exports = function (Order) {
 
         return order.updateAttribute('IsFullyPaid', isFullyPaid)
             .then(res => {
-
-                var nextStatus = '';
+                var nextStatus = order.Status;
                 if (order.Status == 'DRAFTED')
                     nextStatus = 'REQUESTED';
                 // else if (order.Status == 'ARRIVED')
