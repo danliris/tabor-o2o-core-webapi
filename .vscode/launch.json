@@ -15,7 +15,8 @@
                 "DB_PORT": "1433",
                 "DB_NAME": "tabor-o2o-test",
                 "DB_PASSWORD": "Admin-pwd",
-                "DB_USER": "app"
+                "DB_USER": "app",
+                "JETEXPRESS_API_URL": "http://jet-api-resource.azurewebsites.net"
             }
         }
     ]

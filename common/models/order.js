@@ -1,5 +1,8 @@
 'use strict';
 
+var fetch = require('node-fetch'),
+    JETEXPRESS_API_URL = process.env.JETEXPRESS_API_URL;
+
 module.exports = function (Order) {
 
     Order.remoteMethod('createDraft', {
@@ -20,12 +23,6 @@ module.exports = function (Order) {
         returns: { arg: 'result', type: 'Order' }
     });
 
-    // Order.remoteMethod('updatePaymentStatus', {
-    //     accepts: { arg: 'code', type: 'string' },
-    //     http: { path: '/payment-status', verb: 'post' },
-    //     returns: { arg: 'result', type: 'Order' }
-    // });
-
     Order.remoteMethod('completeOrder', {
         accepts: { arg: 'code', type: 'string' },
         http: { path: '/complete', verb: 'post' },
@@ -43,6 +40,36 @@ module.exports = function (Order) {
         http: { path: '/arrive', verb: 'post' },
         returns: { arg: 'result', type: 'Order' }
     });
+
+    Order.remoteMethod('setOrderDetailArrive', {
+        accepts: [
+            { arg: 'id', type: 'string', required: true },
+            { arg: 'detailId', type: 'string', required: true }
+        ],
+        http: { path: '/:id/OrderDetails/:detailId/Arrive', verb: 'post' },
+        returns: { arg: 'result', type: 'Order' }
+    });
+
+    Order.remoteMethod('getLocations', {
+        accepts: { arg: 'keyword', type: 'string' },
+        http: { path: '/Shipping/Locations', verb: 'get' },
+        returns: { arg: 'result', type: 'object' }
+    });
+
+    Order.remoteMethod('getPricings', {
+        accepts: [
+            { arg: 'origin', type: 'string' },
+            { arg: 'destination', type: 'string' },
+            { arg: 'weight', type: 'number' }
+        ],
+        http: { path: '/Shipping/Pricings', verb: 'post' },
+        returns: { arg: 'result', type: 'object' }
+    });
+
+    Order.remoteMethod('getWeightRoundingLimit', {
+        http: { path: '/Shipping/WeightRoundingLimit', verb: 'get' },
+        returns: { arg: 'result', type: 'number' }
+    })
 
     Order.createDraft = function (data, cb) {
         var promises = [];
@@ -75,18 +102,25 @@ module.exports = function (Order) {
 
         return populateData(Order, data, true)
             .then(order => {
-                return Order.upsert(order)
+                return updatePricing(order);
+            })
+            .then(order => {
+                Order.upsert(order)
                     .then((_orderSaved, err) => {
                         for (var i = 0, length = order.OrderDetails.length; i < length; i++) {
                             promises.push(Order.app.models.OrderDetail.upsert(order.OrderDetails[i]));
                         }
+                        return Promise.all(promises);
+                    })
+            })
 
-                        return Promise.all(promises)
-                            .then(response => {
-                                return _orderSaved;
-                            });
-                    });
-            });
+            .then(response => {
+                return getOrderWithDetails(Order, data.Code);
+            })
+
+            .then(response => {
+                return response;
+            })
     }
 
     Order.payment = function (data, cb) {
@@ -130,33 +164,6 @@ module.exports = function (Order) {
             })
     }
 
-    // Order.updatePaymentStatus = function (code, cb) {
-    //     return getOrderWithDetails(Order, code)
-    //         .then(order => {
-    //             if (order == null) {
-    //                 throw 'Not found / Invalid Status';
-    //             }
-
-    //             if (order.Status != 'DRAFTED' && order.Status != 'ARRIVED')
-    //                 throw `Invalid Status: ${order.Status}`;
-
-    //             var totalPaidAmount = order.OrderPayments().reduce(function (a, b) {
-    //                 return b.Amount + a;
-    //             }, 0);
-
-    //             // lunas?
-    //             var isFullyPaid = totalPaidAmount >= order.TotalPrice + order.TotalShippingFee;
-
-    //             var nextStatus = '';
-    //             if (order.Status == 'DRAFTED')
-    //                 nextStatus = 'REQUESTED';
-    //             else if (order.Status == 'ARRIVED')
-    //                 nextStatus = 'RECEIVED';
-
-    //             return updateOrderStatus(order, nextStatus);
-    //         });
-    // }
-
     Order.voidDraft = function (code, cb) {
         return getOrderWithDetails(Order, code)
             .then(order => {
@@ -183,6 +190,46 @@ module.exports = function (Order) {
             });
     }
 
+    Order.setOrderDetailArrive = function (id, detailId, cb) {
+        return getOrderWithDetails(Order, id)
+            .then(order => {
+                if (order == null)
+                    throw 'Not found';
+
+                if (order.Status != 'DELIVERED' && order.Status != 'PARTIALLY DELIVERED' && order.Status != 'PARTIALLY ARRIVED')
+                    throw `Invalid Status: ${order.Status}`;
+
+                // update orderdetail
+                var orderDetail = order.OrderDetails().find(x => x.Code == detailId);
+
+                if (orderDetail.Status != 'DELIVERED')
+                    throw `Invalid Detail Status: ${orderDetail.Status}`;
+
+                return updateOrderDetailStatus(orderDetail, 'ARRIVED');
+            })
+            .then(orderDetail => {
+                return getOrderWithDetails(Order, orderDetail.OrderCode);
+            })
+            .then(order => {
+                var totalDetail = order.OrderDetails().length;
+                var totalClosed = 0;
+
+                for (var i = 0; i < totalDetail; i++) {
+                    if (order.OrderDetails()[i].Status == 'ARRIVED'
+                        || order.OrderDetails()[i].Status == 'REJECTED'
+                        || order.OrderDetails()[i].Status == 'VOIDED')
+                        totalClosed++;
+                }
+
+                var status = (totalClosed < totalDetail) ? 'PARTIALLY ARRIVED' : 'ARRIVED';
+
+                return order.updateAttribute('Status', status);
+            })
+            .then(response => {
+                return response;
+            });
+    }
+
     Order.completeOrder = function (code, cb) {
         return getOrderWithDetails(Order, code)
             .then(order => {
@@ -195,6 +242,10 @@ module.exports = function (Order) {
                 return updateOrderStatus(order, 'COMPLETED');
             });
     }
+
+    Order.getLocations = getLocations;
+    Order.getPricings = getPricings;
+    Order.getWeightRoundingLimit = getWeightRoundingLimit;
 
     function updateProductStock(Order, order) {
         var promises = [];
@@ -246,13 +297,33 @@ module.exports = function (Order) {
         });
     }
 
+    function updateOrderDetailStatus(orderDetail, status) {
+        var currentDate = new Date();
+
+        var promises = [];
+        promises.push(orderDetail.updateAttribute('Status', status));
+        promises.push(orderDetail.OrderTracks.create({
+            OrderCode: orderDetail.OrderCode,
+            OrderDetailCode: orderDetail.Code,
+            TrackDate: currentDate,
+            Status: status,
+            Remark: '-'
+        }));
+
+        return Promise.all(promises)
+            .then(res => {
+                return res[0];
+            });
+    }
+
     function updateOrderStatus(order, status) {
         var currentDate = new Date();
         var promises = [];
 
         promises.push(order.updateAttribute('Status', status));
 
-        promises.push(order.OrderDetails.updateAll({}, { 'Status': status }, function (err, info, count) { }));
+        // kalo VOIDED, REJECTED jangan diupdate lagi. anggap sudah kelar urusannya
+        promises.push(order.OrderDetails.updateAll({ Status: { nin: ['VOIDED', 'REJECTED'] }}, { 'Status': status }, function (err, info, count) { }));
 
         for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
             promises.push(
@@ -274,19 +345,18 @@ module.exports = function (Order) {
     }
 
     function IDGenerator() {
-        this.length = 8;
         this.timestamp = +new Date;
 
         var _getRandomInt = function (min, max) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
-        this.generate = function () {
+        this.generate = function (length = 8) {
             var ts = this.timestamp.toString();
             var parts = ts.split("").reverse();
             var id = "";
 
-            for (var i = 0; i < this.length; ++i) {
+            for (var i = 0; i < length; ++i) {
                 var index = _getRandomInt(0, parts.length - 1);
                 id += parts[index];
             }
@@ -350,8 +420,8 @@ module.exports = function (Order) {
                     TotalWeight: 0, // calcluate later
                     ShippingDestination: data.ShippingDestination,
                     ShippingProductCode: data.ShippingProductCode,
-                    ShippingDueDay: data.ShippingDueDay,
-                    TotalShippingFee: data.TotalShippingFee, // calculate later
+                    ShippingDueDay: '', // fetch later
+                    TotalShippingFee: 0, // calculate later
                     IsFullyPaid: false,
                     Status: status,
                     OrderDetails: []
@@ -360,21 +430,21 @@ module.exports = function (Order) {
                 for (var i = 0, length = data.OrderDetails.length; i < length; i++) {
                     var detail = data.OrderDetails[i],
                         product = products.find(x =>
-                            x.Code == detail.ProductCode &&
-                            x.DealerCode == detail.DealerCode);
+                            x.Code == detail.ProductCode
+                            && x.DealerCode == detail.DealerCode);
 
                     if (detail.Quantity > product.Quantity)
                         throw 'Insufficient stocks.';
 
                     var orderDetail = {
-                        Code: !isUpdate ? idGenerator.generate() : detail.Code,
+                        Code: !isUpdate ? idGenerator.generate(12) : detail.Code,
                         OrderCode: order.Code,
                         ProductCode: detail.ProductCode,
                         DealerCode: detail.DealerCode,
                         Quantity: detail.Quantity,
                         ShippingFee: 0, // calculate later
                         IsRetur: false,
-                        Status: status,
+                        Status: detail.Quantity <= 0 ? 'VOIDED' : status,
                         Price: product.Price * detail.Quantity,
                         DPNominal: (product.DP / 100) * product.Price * detail.Quantity,
                         Weight: product.Weight * detail.Quantity,
@@ -407,5 +477,82 @@ module.exports = function (Order) {
                 return order;
             });
 
+    }
+
+    function updatePricing(data) {
+        data.TotalShippingFee = 0;
+
+        if (data.SelfPickUp)
+            return data;
+
+        var promises = [];
+        // ambil rounding limit
+        promises.push(getWeightRoundingLimit());
+        // ambil harga / kg
+        promises.push(getPricings('JAKARTA', data.ShippingDestination, 1));
+
+        return Promise.all(promises)
+            .then(responses => {
+                var weightRoundingLimit = responses[0];
+                var pricingOptions = responses[1][0].pricingOptions;
+                var pricingOption = pricingOptions.find(t => t.productCode == data.ShippingProductCode);
+
+                // Set buat distinct value, Array.from buat convert Set > Array
+                var dealerCodes = Array.from(new Set(data.OrderDetails.map(t => t.DealerCode)));
+
+                for (var i = 0, length = dealerCodes.length; i < length; i++) {
+                    var weight = data.OrderDetails
+                        .filter(t => t.DealerCode == dealerCodes[i]) // filter by dealer code
+                        .map(t => t.Quantity * t.Weight) // bikin array baru yang isinya berat * quantity
+                        .reduce((a, b) => { return a + b }); // total berat
+
+                    // pembulatan
+                    if (weight == 0)
+                        weight = 0;
+                    else if (weight < 1)
+                        weight = 1;
+                    else if (weight - Math.floor(weight) > weightRoundingLimit)
+                        weight = Math.ceil(weight);
+                    else
+                        weight = Math.floor(weight);
+
+                    data.TotalShippingFee += weight * pricingOption.calculationResult;
+                }
+
+                return data;
+            });
+    }
+
+    function getLocations(keyword) {
+        return fetch(`${JETEXPRESS_API_URL}/v1/pricings/locations?keyword=${keyword}`)
+            .then(res => {
+                return res.json();
+            })
+            .catch(err => {
+                throw err;
+            });
+    }
+
+    function getPricings(origin, destination, weight = 1) {
+        return fetch(`${JETEXPRESS_API_URL}/v1/pricings`, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: `origin_value=${origin}&destination_value=${destination}&weight=${weight}` })
+            .then(res => {
+                return res.json();
+            })
+            .catch(err => {
+                throw err;
+            });
+    }
+
+    function getWeightRoundingLimit() {
+        return fetch(`${JETEXPRESS_API_URL}/v1/configurations`)
+            .then(res => {
+                return res.json();
+            })
+            .then(json => {
+                return json.weightRoundingLimit;
+            })
+            .catch(err => {
+                throw err;
+            });
     }
 };
