@@ -2,5 +2,11 @@
   "db" : {
     "name": "db",
     "connector": "mssql"
+  },
+  "storage": {
+    "name": "storage",
+    "connector": "loopback-component-storage",
+    "provider": "filesystem",
+    "root": "server/storage"
   }
 }

@@ -2,9 +2,19 @@
 
 var loopback = require('loopback');
 var boot = require('loopback-boot');
+var path = require("path");
 
 var app = module.exports = loopback();
 app.loopback.User.settings.acls = require('./user-acls.json');
+
+// var ds = loopback.createDataSource({
+//     connector: require('loopback-component-storage'),
+//     provider: 'filesystem',
+//     root: path.join(__dirname, 'images/products')
+// });
+
+// var container = ds.createModel('container');
+// app.model(container);
 
 app.start = function() {
   // start the web server
