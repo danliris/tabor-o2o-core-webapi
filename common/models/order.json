@@ -64,7 +64,7 @@
       "type": "number"
     },
     "ShippingDueDay": {
-      "type": "number"
+      "type": "string"
     },
     "TotalShippingFee": {
       "type": "number"
