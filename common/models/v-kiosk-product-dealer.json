@@ -18,7 +18,7 @@
             "type": "string"
         },
         "BranchId": {
-            "type": "int"
+            "type": "number"
         },
         "BranchName": {
             "type": "string"
@@ -27,7 +27,7 @@
             "type": "string"
         },
         "ProductDealerId": {
-            "type": "int"
+            "type": "number"
         }
         
     },
