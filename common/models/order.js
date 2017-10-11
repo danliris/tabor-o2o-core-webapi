@@ -69,9 +69,20 @@ module.exports = function (Order) {
     Order.remoteMethod('getWeightRoundingLimit', {
         http: { path: '/Shipping/WeightRoundingLimit', verb: 'get' },
         returns: { arg: 'result', type: 'number' }
-    })
+    });
 
-    Order.createDraft = function (data, cb) {
+    Order.createDraft = createDraft;
+    Order.updateDraft = updateDraft;
+    Order.payment = payment;
+    Order.voidDraft = voidDraft;
+    Order.arriveOrder = arriveOrder;
+    Order.setOrderDetailArrive = setOrderDetailArrive;
+    Order.completeOrder = completeOrder;
+    Order.getLocations = getLocations;
+    Order.getPricings = getPricings;
+    Order.getWeightRoundingLimit = getWeightRoundingLimit;
+
+    function createDraft(data, cb) {
         var promises = [];
         return populateData(Order, data)
             .then(order => {
@@ -97,12 +108,21 @@ module.exports = function (Order) {
             });
     }
 
-    Order.updateDraft = function (data, cb) {
+    function updateDraft(data, cb) {
         var promises = [];
 
         return populateData(Order, data, true)
             .then(order => {
-                return updatePricing(order);
+                if (!order.SelfPickUp) {
+                    return getKiosk(Order, order.KioskCode)
+                        .then(kiosk => {
+                            order.OriginBranchName = kiosk.BranchName;
+
+                            return updatePricing(order);
+                        });
+                }
+
+                return order;
             })
             .then(order => {
                 Order.upsert(order)
@@ -123,7 +143,16 @@ module.exports = function (Order) {
             })
     }
 
-    Order.payment = function (data, cb) {
+    function getKiosk(Order, kioskCode) {
+        return Order.app.models.Kiosk
+            .findOne({
+                where: {
+                    Code: kioskCode
+                }
+            });
+    }
+
+    function payment(data, cb) {
         // kalo out of stock
         return getOrderWithDetails(Order, data.OrderCode)
             .then(order => {
@@ -164,7 +193,7 @@ module.exports = function (Order) {
             })
     }
 
-    Order.voidDraft = function (code, cb) {
+    function voidDraft(code, cb) {
         return getOrderWithDetails(Order, code)
             .then(order => {
                 if (order == null)
@@ -177,7 +206,7 @@ module.exports = function (Order) {
             });
     }
 
-    Order.arriveOrder = function (code, cb) {
+    function arriveOrder(code, cb) {
         return getOrderWithDetails(Order, code)
             .then(order => {
                 if (order == null)
@@ -190,7 +219,7 @@ module.exports = function (Order) {
             });
     }
 
-    Order.setOrderDetailArrive = function (id, detailId, cb) {
+    function setOrderDetailArrive(id, detailId, cb) {
         return getOrderWithDetails(Order, id)
             .then(order => {
                 if (order == null)
@@ -230,7 +259,7 @@ module.exports = function (Order) {
             });
     }
 
-    Order.completeOrder = function (code, cb) {
+    function completeOrder(code, cb) {
         return getOrderWithDetails(Order, code)
             .then(order => {
                 if (order == null)
@@ -242,10 +271,6 @@ module.exports = function (Order) {
                 return updateOrderStatus(order, 'COMPLETED');
             });
     }
-
-    Order.getLocations = getLocations;
-    Order.getPricings = getPricings;
-    Order.getWeightRoundingLimit = getWeightRoundingLimit;
 
     function updateProductStock(Order, order) {
         var promises = [];
@@ -323,7 +348,7 @@ module.exports = function (Order) {
         promises.push(order.updateAttribute('Status', status));
 
         // kalo VOIDED, REJECTED jangan diupdate lagi. anggap sudah kelar urusannya
-        promises.push(order.OrderDetails.updateAll({ Status: { nin: ['VOIDED', 'REJECTED'] }}, { 'Status': status }, function (err, info, count) { }));
+        promises.push(order.OrderDetails.updateAll({ Status: { nin: ['VOIDED', 'REJECTED'] } }, { 'Status': status }, function (err, info, count) { }));
 
         for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
             promises.push(
@@ -489,7 +514,7 @@ module.exports = function (Order) {
         // ambil rounding limit
         promises.push(getWeightRoundingLimit());
         // ambil harga / kg
-        promises.push(getPricings('JAKARTA', data.ShippingDestination, 1));
+        promises.push(getPricings(data.OriginBranchName, data.ShippingDestination, 1));
 
         return Promise.all(promises)
             .then(responses => {
@@ -534,7 +559,7 @@ module.exports = function (Order) {
     }
 
     function getPricings(origin, destination, weight = 1) {
-        return fetch(`${JETEXPRESS_API_URL}/v1/pricings`, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: `origin_value=${origin}&destination_value=${destination}&weight=${weight}` })
+        return fetch(`${JETEXPRESS_API_URL}/v1/pricings`, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: `origin_value=${origin.toUpperCase()}&destination_value=${destination.toUpperCase()}&weight=${weight}` })
             .then(res => {
                 return res.json();
             })
