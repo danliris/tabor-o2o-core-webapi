@@ -114,7 +114,8 @@
           "findById": true,
           "findOne": true,
           "count": true,
-          "exists": true
+          "exists": true,
+          "test": true
         }
       }
     }
