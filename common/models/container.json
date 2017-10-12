@@ -1,5 +1,5 @@
 {
-  "name": "container",
+  "name": "Container",
   "base": "Model",
   "properties": {},
   "validations": [],
