@@ -6,8 +6,7 @@
   "storage": {
     "name": "storage",
     "connector": "loopback-component-storage",
-    "provider": "azure",
-    "storageAccount" : "efratastorage",
-    "storageAccessKey": "uKUQkA/NEv0n5x9sKm4vWuWBEbL+sWe8o0NZVW/6RZ6hk01xvrEYJ23M80AvQefDuW8f0bdxPnuCVr2D5lzvig=="
+    "provider": "filesystem",
+    "root" : "storage"
   }
 }
