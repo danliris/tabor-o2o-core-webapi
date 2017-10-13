@@ -151,9 +151,5 @@
         }
       }
     }
-  },
-  "Container": {
-    "dataSource": "storage",
-    "public": true
   }
 }
