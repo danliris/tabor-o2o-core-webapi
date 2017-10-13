@@ -151,7 +151,7 @@
       }
     }
   },
-  "container": {
+  "Container": {
     "dataSource": "storage",
     "public": true
   }
