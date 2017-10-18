@@ -16,7 +16,7 @@
     },
     "SKU": {
       "type": "string",
-      "required": true
+      "required": false
     },
     "Name": {
       "type": "string",
