@@ -6,6 +6,13 @@
   "storage": {
     "name": "storage",
     "connector": "loopback-component-storage",
+    "provider": "azure",
+    "storageAccount": "o2ostorage",
+    "storageAccessKey": "sfinUEzMROTpycsbFf9TLY/TDzZ82L5vKjpDDiIcMBFFdsCy9Y2qsfbJOUlcBesjnYUmTaB7e7+9DGCKqnsqjQ=="
+  },
+  "storage2": {
+    "name": "storage2",
+    "connector": "loopback-component-storage",
     "provider": "filesystem",
     "root": "/"
   }
