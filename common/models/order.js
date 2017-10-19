@@ -302,15 +302,19 @@ module.exports = function (Order) {
                         DealerCode: detail.DealerCode
                     }
                 })
-                    .then(product => {
-                        product.Quantity -= detail.Quantity;
-                        product.save();
-                    })
             );
         }
-        Promise.all(promises)
-            .then(res => {
 
+        return Promise.all(promises)
+            .then(productDealers => {
+                productDealers.forEach(productDealer => {
+                    var detail = order.OrderDetails()
+                        .find(t => t.ProductCode == productDealer.ProductCode
+                            && t.DealerCode == productDealer.DealerCode);
+
+                    productDealer.Quantity -= detail.Quantity;
+                    productDealer.save();
+                });
             });
     }
 
@@ -328,8 +332,7 @@ module.exports = function (Order) {
                 var shouldUpdateDetail = false; // kalo udah arrived dan mau bayar lagi, ga usah update2 status
 
                 // kalo masih drafted, jadi requested
-                if (order.Status == 'DRAFTED')
-                {
+                if (order.Status == 'DRAFTED') {
                     nextStatus = 'REQUESTED';
                     shouldUpdateDetail = true;
                 }
@@ -622,6 +625,7 @@ module.exports = function (Order) {
                     "orderCode": order.Code,
                     "status": order.Status
                 };
+
                 var filters = [
                     { "field": "tag", "key": "kioskCode", "relation": "=", "value": order.KioskCode },
                     { "field": "tag", "key": "role", "relation": "=", "value": "staff" },
@@ -631,6 +635,10 @@ module.exports = function (Order) {
                 base.sendNotification(base.grindData(message, payload, filters));
 
                 // save to notifications
+                // return Order.app.models.Notification.create({ UserId: 0, NotifiedDate: new Date(), Message: message, Data: JSON.stringify(payload), IsRead: 0 });
+            })
+            .then(notification => {
+                return notification;
             })
             .catch(err => { throw err; })
             .finally(() => {
@@ -654,12 +662,12 @@ module.exports = function (Order) {
                         "status": order.Status,
                         "kioskCode": order.KioskCode
                     };
+
                     var filters = [
                         { "field": "tag", "key": "dealerCode", "relation": "=", "value": dealerCode }
                     ];
-                    base.sendNotification(base.grindData(message, payload, filters));
 
-                    // save to notifications
+                    base.sendNotification(base.grindData(message, payload, filters));
                 });
             })
             .catch(err => { throw err; })
