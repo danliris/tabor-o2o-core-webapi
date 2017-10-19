@@ -454,6 +454,7 @@ module.exports = function (Order) {
                 var order = {
                     Code: !isUpdate ? idGenerator.generate() : data.Code,
                     KioskCode: data.KioskCode,
+                    InChargeEmail: data.InChargeEmail,
                     IdCard: data.IdCard,
                     Name: data.Name,
                     Email: data.Email,
@@ -619,10 +620,14 @@ module.exports = function (Order) {
                     "status": order.Status
                 };
                 var filters = [
-                    { "field": "tag", "key": "kioskCode", "relation": "=", "value": order.KioskCode }
+                    { "field": "tag", "key": "kioskCode", "relation": "=", "value": order.KioskCode },
+                    { "field": "tag", "key": "role", "relation": "=", "value": "staff" },
+                    { "field": "tag", "key": "email", "relation": "=", "value": order.InChargeEmail }
                 ];
 
                 base.sendNotification(base.grindData(message, payload, filters));
+
+                // save to notifications
             })
             .catch(err => { throw err; })
             .finally(() => {
@@ -649,6 +654,8 @@ module.exports = function (Order) {
                         { "field": "tag", "key": "dealerCode", "relation": "=", "value": order.DealerCode }
                     ];
                     base.sendNotification(base.grindData(message, payload, filters));
+
+                    // save to notifications
                 });
             })
             .catch(err => { throw err; })
