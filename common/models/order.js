@@ -71,6 +71,18 @@ module.exports = function (Order) {
         returns: { arg: 'result', type: 'number' }
     });
 
+    Order.remoteMethod('notifyDealer', {
+        accepts: { arg: 'orderCode', type: 'string' },
+        http: { path: '/:orderCode/NotifyDealer', verb: 'post' },
+        returns: { arg: 'result', type: 'object' }
+    });
+
+    Order.remoteMethod('notifyKiosk', {
+        accepts: { arg: 'orderCode', type: 'string' },
+        http: { path: '/:orderCode/NotifyKiosk', verb: 'post' },
+        returns: { arg: 'result', type: 'object' }
+    });
+
     Order.createDraft = createDraft;
     Order.updateDraft = updateDraft;
     Order.payment = payment;
@@ -81,6 +93,8 @@ module.exports = function (Order) {
     Order.getLocations = getLocations;
     Order.getPricings = getPricings;
     Order.getWeightRoundingLimit = getWeightRoundingLimit;
+    Order.notifyDealer = notifyDealer;
+    Order.notifyKiosk = notifyKiosk;
 
     function createDraft(data, cb) {
         var promises = [];
@@ -177,8 +191,10 @@ module.exports = function (Order) {
                     .then(orderPayment => {
                         var promises = [];
                         promises.push(updatePaymentStatus(order));
-                        // update stock
-                        promises.push(updateProductStock(Order, order));
+
+                        // kalo lagi mau requested, update stok. pas pelunasan ga perlu update stock
+                        if (order.Status == 'DRAFTED')
+                            promises.push(updateProductStock(Order, order));
 
                         return Promise.all(promises)
                             .then(res => {
@@ -186,6 +202,8 @@ module.exports = function (Order) {
                                 //     .then(order => {
                                 //         return order;
                                 //     });
+
+                                notifyDealer(data.OrderCode);
 
                                 return order;
                             });
@@ -212,6 +230,7 @@ module.exports = function (Order) {
                 if (order == null)
                     throw 'Not found';
 
+                // mesti udah dikirim sama dealer
                 if (order.Status != 'DELIVERED')
                     throw `Invalid Status: ${order.Status}`;
 
@@ -306,12 +325,16 @@ module.exports = function (Order) {
         return order.updateAttribute('IsFullyPaid', isFullyPaid)
             .then(res => {
                 var nextStatus = order.Status;
+
+                // kalo masih drafted, jadi requested
                 if (order.Status == 'DRAFTED')
                     nextStatus = 'REQUESTED';
+
+                // kalo arrived, cuekkin aja
                 // else if (order.Status == 'ARRIVED')
                 //     nextStatus = 'RECEIVED';
 
-                return updateOrderStatus(order, nextStatus);
+                return updateOrderStatus(order, nextStatus, false);
             });
     }
 
@@ -341,26 +364,28 @@ module.exports = function (Order) {
             });
     }
 
-    function updateOrderStatus(order, status) {
+    function updateOrderStatus(order, status, withDetails = true) {
         var currentDate = new Date();
         var promises = [];
 
         promises.push(order.updateAttribute('Status', status));
 
-        // kalo VOIDED, REJECTED jangan diupdate lagi. anggap sudah kelar urusannya
-        promises.push(order.OrderDetails.updateAll({ Status: { nin: ['VOIDED', 'REJECTED'] } }, { 'Status': status }, function (err, info, count) { }));
+        if (withDetails) {
+            // kalo VOIDED, REJECTED jangan diupdate lagi. anggap sudah kelar urusannya
+            promises.push(order.OrderDetails.updateAll({ Status: { nin: ['VOIDED', 'REJECTED'] } }, { 'Status': status }, function (err, info, count) { }));
 
-        for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
-            promises.push(
-                order.OrderDetails()[i].OrderTracks
-                    .create({
-                        OrderCode: order.OrderDetails()[i].OrderCode,
-                        OrderDetailCode: order.OrderDetails()[i].Code,
-                        TrackDate: currentDate,
-                        Status: status,
-                        Remark: '-'
-                    })
-            );
+            for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
+                promises.push(
+                    order.OrderDetails()[i].OrderTracks
+                        .create({
+                            OrderCode: order.OrderDetails()[i].OrderCode,
+                            OrderDetailCode: order.OrderDetails()[i].Code,
+                            TrackDate: currentDate,
+                            Status: status,
+                            Remark: '-'
+                        })
+                );
+            }
         }
 
         return Promise.all(promises)
@@ -578,6 +603,57 @@ module.exports = function (Order) {
             })
             .catch(err => {
                 throw err;
+            });
+    }
+
+    function notifyKiosk(orderCode) {
+        var base = Order.base;
+        return Order.findOne({ where: { Code: orderCode } })
+            .then(order => {
+                if (!order)
+                    throw 'Not Found';
+
+                var message = `${order.Status} - ${order.Code}`;
+                var payload = {
+                    "orderCode": order.Code,
+                    "status": order.Status
+                };
+                var filters = [
+                    { "field": "tag", "key": "kioskCode", "relation": "=", "value": order.KioskCode }
+                ];
+
+                base.sendNotification(base.grindData(message, payload, filters));
+            })
+            .catch(err => { throw err; })
+            .finally(() => {
+                return true;
+            });
+    }
+
+    function notifyDealer(orderCode) {
+        var base = Order.base;
+        return getOrderWithDetails(Order, orderCode)
+            .then(order => {
+                if (!order)
+                    throw 'Not Found';
+
+                var dealerCodes = order.OrderDetails().map(t => t.DealerCode);
+
+                dealerCodes.forEach(dealerCode => {
+                    var message = `${order.Status} - ${order.Code}`;
+                    var payload = {
+                        "orderCode": order.Code,
+                        "status": order.Status
+                    };
+                    var filters = [
+                        { "field": "tag", "key": "dealerCode", "relation": "=", "value": order.DealerCode }
+                    ];
+                    base.sendNotification(base.grindData(message, payload, filters));
+                });
+            })
+            .catch(err => { throw err; })
+            .finally(() => {
+                return true;
             });
     }
 };
