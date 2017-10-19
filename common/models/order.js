@@ -651,7 +651,7 @@ module.exports = function (Order) {
                         "status": order.Status
                     };
                     var filters = [
-                        { "field": "tag", "key": "dealerCode", "relation": "=", "value": order.DealerCode }
+                        { "field": "tag", "key": "dealerCode", "relation": "=", "value": dealerCode }
                     ];
                     base.sendNotification(base.grindData(message, payload, filters));
 
