@@ -18,6 +18,9 @@
       "type": "string",
       "required": true
     },
+    "InChargeEmail": {
+      "type": "string"
+    },
     "IdCard": {
       "type": "string"
     },
