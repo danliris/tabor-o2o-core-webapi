@@ -648,7 +648,8 @@ module.exports = function (Order) {
                     var message = `${order.Status} - ${order.Code}`;
                     var payload = {
                         "orderCode": order.Code,
-                        "status": order.Status
+                        "status": order.Status,
+                        "kioskCode": order.KioskCode
                     };
                     var filters = [
                         { "field": "tag", "key": "dealerCode", "relation": "=", "value": dealerCode }
