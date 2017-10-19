@@ -325,16 +325,19 @@ module.exports = function (Order) {
         return order.updateAttribute('IsFullyPaid', isFullyPaid)
             .then(res => {
                 var nextStatus = order.Status;
+                var shouldUpdateDetail = false; // kalo udah arrived dan mau bayar lagi, ga usah update2 status
 
                 // kalo masih drafted, jadi requested
                 if (order.Status == 'DRAFTED')
+                {
                     nextStatus = 'REQUESTED';
-
+                    shouldUpdateDetail = true;
+                }
                 // kalo arrived, cuekkin aja
                 // else if (order.Status == 'ARRIVED')
                 //     nextStatus = 'RECEIVED';
 
-                return updateOrderStatus(order, nextStatus, false);
+                return updateOrderStatus(order, nextStatus, shouldUpdateDetail);
             });
     }
 
