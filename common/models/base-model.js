@@ -38,7 +38,7 @@ module.exports = function (BaseModel) {
                 console.log(JSON.parse(data));
             });
         });
-
+        
         req.on('error', function (e) {
             console.log("ERROR:");
             console.log(e);

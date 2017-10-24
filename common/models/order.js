@@ -166,6 +166,15 @@ module.exports = function (Order) {
             });
     }
 
+    function getUserByEmail(Order, email) {
+        return Order.app.models.User
+            .findOne({
+                where: {
+                    email: email
+                }
+            });
+    }
+
     function payment(data, cb) {
         // kalo out of stock
         return getOrderWithDetails(Order, data.OrderCode)
@@ -634,8 +643,11 @@ module.exports = function (Order) {
 
                 base.sendNotification(base.grindData(message, payload, filters));
 
-                // save to notifications
-                // return Order.app.models.Notification.create({ UserId: 0, NotifiedDate: new Date(), Message: message, Data: JSON.stringify(payload), IsRead: 0 });
+                // get userid by email
+                return getUserByEmail(Order, order.InChargeEmail)
+                    .then(user => {
+                        return Order.app.models.Notification.create({ UserId: user.id, NotifiedDate: new Date(), Message: message, Data: JSON.stringify(payload), IsRead: 0 });
+                    })
             })
             .then(notification => {
                 return notification;
@@ -653,7 +665,7 @@ module.exports = function (Order) {
                 if (!order)
                     throw 'Not Found';
 
-                var dealerCodes = order.OrderDetails().map(t => t.DealerCode);
+                var dealerCodes = Array.from(new Set(order.OrderDetails().map(t => t.DealerCode)));
 
                 dealerCodes.forEach(dealerCode => {
                     var message = `${order.Status} - ${order.Code}`;
