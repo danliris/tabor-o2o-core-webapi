@@ -1,0 +1,44 @@
+{
+    "name": "Notification",
+    "plural": "Notifications",
+    "base": "BaseModel",
+    "idInjection": false,
+    "options": {
+        "validateUpsert": true
+    },
+    "mixins": {
+        "TimeStamp": {}
+    },
+    "properties": {
+        "UserId": {
+            "type": "int",
+            "required": true
+        },
+        "NotifiedDate": {
+            "type": "date",
+            "required": true
+        },
+        "Message": {
+            "type": "string",
+            "required": true
+        },
+        "Data": {
+            "type": "string",
+            "required": true
+        },
+        "IsRead": {
+            "type": "boolean",
+            "required": true
+        }
+    },
+    "validations": [],
+    "relations": {
+        "Users": {
+            "type": "belongsTo",
+            "model": "User",
+            "foreignKey": "UserId"
+        }
+    },
+    "acls": [],
+    "methods": {}
+}
