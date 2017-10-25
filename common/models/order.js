@@ -256,6 +256,10 @@ module.exports = function (Order) {
                 if (order.Status != 'DELIVERED' && order.Status != 'PARTIALLY DELIVERED' && order.Status != 'PARTIALLY ARRIVED')
                     throw `Invalid Status: ${order.Status}`;
 
+                // kalo ternyata dia minta dianterin ke rumah
+                if (!order.SelfPickUp)
+                    throw `This order should be delivered to customer`;
+
                 // update orderdetail
                 var orderDetail = order.OrderDetails().find(x => x.Code == detailId);
 
@@ -483,7 +487,7 @@ module.exports = function (Order) {
                     DP: 0, // calculate later
                     TotalQuantity: 0, // calculate later
                     TotalPrice: 0, // calculate later
-                    TotalWeight: 0, // calcluate later
+                    TotalWeight: 0, // calculate later
                     ShippingDestination: data.ShippingDestination,
                     ShippingProductCode: data.ShippingProductCode,
                     ShippingDueDay: '', // fetch later
@@ -515,7 +519,8 @@ module.exports = function (Order) {
                         DPNominal: (product.DP / 100) * product.Price * detail.Quantity,
                         Weight: product.Weight * detail.Quantity,
                         RequestDate: order.RequestDate,
-                        OrderTracks: []
+                        OrderTracks: [],
+                        Product: product
                     };
 
                     // add track
@@ -569,7 +574,7 @@ module.exports = function (Order) {
                 for (var i = 0, length = dealerCodes.length; i < length; i++) {
                     var weight = data.OrderDetails
                         .filter(t => t.DealerCode == dealerCodes[i]) // filter by dealer code
-                        .map(t => t.Quantity * t.Weight) // bikin array baru yang isinya berat * quantity
+                        .map(t => t.Quantity * t.Product.Weight) // bikin array baru yang isinya berat * quantity << weight ini udah calculated mesti retrieve dari db lagi
                         .reduce((a, b) => { return a + b }); // total berat
 
                     // pembulatan
