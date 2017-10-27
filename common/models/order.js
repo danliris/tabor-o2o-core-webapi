@@ -83,6 +83,11 @@ module.exports = function (Order) {
         returns: { arg: 'result', type: 'object' }
     });
 
+    Order.remoteMethod('updatestatusBy3PL', {
+        http: { path: '/3PLCheckStatus', verb: 'get' },
+        returns: { arg: 'result', type: 'object' }
+    })
+
     Order.createDraft = createDraft;
     Order.updateDraft = updateDraft;
     Order.payment = payment;
@@ -95,6 +100,7 @@ module.exports = function (Order) {
     Order.getWeightRoundingLimit = getWeightRoundingLimit;
     Order.notifyDealer = notifyDealer;
     Order.notifyKiosk = notifyKiosk;
+    Order.updatestatusBy3PL = updatestatusBy3PL;
 
     function createDraft(data, cb) {
         var promises = [];
@@ -628,7 +634,7 @@ module.exports = function (Order) {
     }
 
     function notifyKiosk(orderCode) {
-        var base = Order.base;
+        // var base = Order.base;
         return Order.findOne({ where: { Code: orderCode } })
             .then(order => {
                 if (!order)
@@ -636,12 +642,17 @@ module.exports = function (Order) {
 
                 var message = `${order.Status} - ${order.Code}`;
 
-                // ga jadi pake web push 20171025
-                // var payload = {
-                //     "orderCode": order.Code,
-                //     "status": order.Status
-                // };
+                if (order.Status == 'REJECTED')
+                    message = `Pesanan dengan kode: ${order.Code} dibatalkan oleh dealer.`;
+                if (order.Status == 'DELIVERED')
+                    message = `Pesanan dengan kode: ${order.Code} telah dikirim oleh dealer.`;
 
+                var payload = {
+                    "orderCode": order.Code,
+                    "status": order.Status
+                };
+
+                // ga jadi pake web push 20171025
                 // var filters = [
                 //     { "field": "tag", "key": "kioskCode", "relation": "=", "value": order.KioskCode },
                 //     { "field": "tag", "key": "role", "relation": "=", "value": "staff" },
@@ -693,5 +704,39 @@ module.exports = function (Order) {
             .finally(() => {
                 return true;
             });
+    }
+
+    // buat update status order secara berkala
+    function updatestatusBy3PL() {
+        // get order yang delivered & punya pickup information
+        return Order.find({
+            include: {
+                OrderDetails: 'OrderDetailDeliveries'
+            },
+            where: {
+                Status: 'DELIVERED',
+                SelfPickUp: false
+            }
+        }).then(orders => {
+            var bookingCodes = [];
+            orders.forEach(order => {
+                order.OrderDetails().forEach(orderDetail => {
+                    bookingCodes.push(orderDetail.OrderDetailDeliveries().map(t => t.PickUpItemCode));
+                });
+            });
+            return orders; // sementara
+
+            //bookingCodes.join(',');
+            // combine bookingcodes
+            // check from 3pl
+            //// result array of waybills
+            //// promise all buat update tiap order yang mesti diupdate
+
+        });
+    }
+
+    function checkStatusFrom3PL() {
+        // return fetch(`${JETEXPRESS_API_URL}/v1/waybills/`)
+        //     .then(res => { return res.json(); })
     }
 };
