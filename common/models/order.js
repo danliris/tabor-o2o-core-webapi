@@ -635,18 +635,20 @@ module.exports = function (Order) {
                     throw 'Not Found';
 
                 var message = `${order.Status} - ${order.Code}`;
-                var payload = {
-                    "orderCode": order.Code,
-                    "status": order.Status
-                };
 
-                var filters = [
-                    { "field": "tag", "key": "kioskCode", "relation": "=", "value": order.KioskCode },
-                    { "field": "tag", "key": "role", "relation": "=", "value": "staff" },
-                    { "field": "tag", "key": "email", "relation": "=", "value": order.InChargeEmail }
-                ];
+                // ga jadi pake web push 20171025
+                // var payload = {
+                //     "orderCode": order.Code,
+                //     "status": order.Status
+                // };
 
-                base.sendNotification(base.grindData(message, payload, filters));
+                // var filters = [
+                //     { "field": "tag", "key": "kioskCode", "relation": "=", "value": order.KioskCode },
+                //     { "field": "tag", "key": "role", "relation": "=", "value": "staff" },
+                //     { "field": "tag", "key": "email", "relation": "=", "value": order.InChargeEmail }
+                // ];
+
+                // base.sendNotification(base.grindData(message, payload, filters));
 
                 // get userid by email
                 return getUserByEmail(Order, order.InChargeEmail)
