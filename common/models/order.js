@@ -297,6 +297,49 @@ module.exports = function (Order) {
             });
     }
 
+    function setOrderDetailCompletedBy3PL(id, detailId) {
+        return getOrderWithDetails(Order, id)
+            .then(order => {
+                if (order == null)
+                    throw 'Not found';
+
+                if (order.Status != 'DELIVERED' && order.Status != 'PARTIALLY DELIVERED')
+                    throw `Invalid Status: ${order.Status}`;
+
+                if (order.SelfPickUp)
+                    throw `This order should be delivered to outlet`;
+
+                // update orderdetail
+                var orderDetail = order.OrderDetails().find(x => x.Code == detailId);
+
+                if (orderDetail.Status != 'DELIVERED')
+                    throw `Invalid Detail Status: ${orderDetail.Status}`;
+
+                return updateOrderDetailStatus(orderDetail, 'COMPLETED');
+            })
+            .then(orderDetail => {
+                return getOrderWithDetails(Order, orderDetail.OrderCode);
+            })
+            .then(order => {
+                var totalDetail = order.OrderDetails().length;
+                var totalClosed = 0;
+
+                for (var i = 0; i < totalDetail; i++) {
+                    if (order.OrderDetails()[i].Status == 'COMPLETED'
+                        || order.OrderDetails()[i].Status == 'REJECTED'
+                        || order.OrderDetails()[i].Status == 'VOIDED')
+                        totalClosed++;
+                }
+
+                var status = (totalClosed < totalDetail) ? 'PARTIALLY COMPLETED' : 'COMPLETED';
+
+                return order.updateAttribute('Status', status);
+            })
+            .then(response => {
+                return response;
+            });
+    }
+
     function completeOrder(code, cb) {
         return getOrderWithDetails(Order, code)
             .then(order => {
@@ -600,39 +643,6 @@ module.exports = function (Order) {
             });
     }
 
-    function getLocations(keyword) {
-        return fetch(`${JETEXPRESS_API_URL}/v1/pricings/locations?keyword=${keyword}`)
-            .then(res => {
-                return res.json();
-            })
-            .catch(err => {
-                throw err;
-            });
-    }
-
-    function getPricings(origin, destination, weight = 1) {
-        return fetch(`${JETEXPRESS_API_URL}/v1/pricings`, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: `origin_value=${origin.toUpperCase()}&destination_value=${destination.toUpperCase()}&weight=${weight}` })
-            .then(res => {
-                return res.json();
-            })
-            .catch(err => {
-                throw err;
-            });
-    }
-
-    function getWeightRoundingLimit() {
-        return fetch(`${JETEXPRESS_API_URL}/v1/configurations`)
-            .then(res => {
-                return res.json();
-            })
-            .then(json => {
-                return json.weightRoundingLimit;
-            })
-            .catch(err => {
-                throw err;
-            });
-    }
-
     function notifyKiosk(orderCode) {
         // var base = Order.base;
         return Order.findOne({ where: { Code: orderCode } })
@@ -718,25 +728,81 @@ module.exports = function (Order) {
                 SelfPickUp: false
             }
         }).then(orders => {
-            var bookingCodes = [];
-            orders.forEach(order => {
-                order.OrderDetails().forEach(orderDetail => {
-                    bookingCodes.push(orderDetail.OrderDetailDeliveries().map(t => t.PickUpItemCode));
-                });
-            });
-            return orders; // sementara
+            var bookingCodes = [],
+                bookingCode = '',
+                promises = [];
 
-            //bookingCodes.join(',');
-            // combine bookingcodes
-            // check from 3pl
-            //// result array of waybills
-            //// promise all buat update tiap order yang mesti diupdate
+            orders.forEach(order => {
+                order.OrderDetails()
+                    .filter(t => t.Status == 'DELIVERED')
+                    .forEach(orderDetail => {
+                        bookingCode = orderDetail
+                            .OrderDetailDeliveries()
+                            .map(t => t.PickUpItemCode);
+
+                        promises.push(checkStatusFrom3PL(bookingCode)
+                            .then(waybill => {
+                                if (waybill.status != 'DELIVERED')
+                                    return `Order Detail: ${orderDetail.Code}, Booking Code: ${bookingCode} has not been delivered yet.`;
+
+                                return setOrderDetailCompletedBy3PL(orderDetail.OrderCode, orderDetail.Code);
+                            }));
+
+                    });
+            });
+
+
+            return Promise.all(promises)
+                .then(responses => {
+                    console.log(responses);
+                });
 
         });
     }
 
-    function checkStatusFrom3PL() {
-        // return fetch(`${JETEXPRESS_API_URL}/v1/waybills/`)
-        //     .then(res => { return res.json(); })
+    //region JET EXPRESS
+    function getLocations(keyword) {
+        return fetch(`${JETEXPRESS_API_URL}/v1/pricings/locations?keyword=${keyword}`)
+            .then(res => {
+                return res.json();
+            })
+            .catch(err => {
+                throw err;
+            });
     }
+
+    function getPricings(origin, destination, weight = 1) {
+        return fetch(`${JETEXPRESS_API_URL}/v1/pricings`, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: `origin_value=${origin.toUpperCase()}&destination_value=${destination.toUpperCase()}&weight=${weight}` })
+            .then(res => {
+                return res.json();
+            })
+            .catch(err => {
+                throw err;
+            });
+    }
+
+    function getWeightRoundingLimit() {
+        return fetch(`${JETEXPRESS_API_URL}/v1/configurations`)
+            .then(res => {
+                return res.json();
+            })
+            .then(json => {
+                return json.weightRoundingLimit;
+            })
+            .catch(err => {
+                throw err;
+            });
+    }
+
+    function checkStatusFrom3PL(bookingCode) {
+        // return fetch(`http://localhost:50663/v1/tracks/waybills-by-booking-number/${bookingCode}`)
+        //     .then(res => { return res.json(); })
+        return fetch(`${JETEXPRESS_API_URL}/v1/tracks/waybills-by-booking-number/${bookingCode}`)
+            .then(res => { return res.json(); })
+            .catch(err => {
+                throw err;
+            });
+    }
+    //endregion
+
 };
