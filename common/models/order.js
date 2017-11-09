@@ -795,10 +795,9 @@ module.exports = function (Order) {
     }
 
     function checkStatusFrom3PL(bookingCode) {
-        // return fetch(`${JETEXPRESS_API_URL}/v1/tracks/waybills-by-booking-number/${bookingCode}`)
+        // return fetch(`http://localhost:50663/v1/tracks/waybills-by-booking-number/${bookingCode}`)
         //     .then(res => { return res.json(); })
-
-        return fetch(`http://localhost:50663/v1/tracks/waybills-by-booking-number/${bookingCode}`)
+        return fetch(`${JETEXPRESS_API_URL}/v1/tracks/waybills-by-booking-number/${bookingCode}`)
             .then(res => { return res.json(); })
             .catch(err => {
                 throw err;
