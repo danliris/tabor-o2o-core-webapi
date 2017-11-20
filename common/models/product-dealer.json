@@ -25,6 +25,10 @@
     "IsAvailable": {
       "type": "boolean",
       "required": true
+    },
+    "MinQuantity": {
+      "type": "number",
+      "required": true
     }
   },
   "validations": [],
