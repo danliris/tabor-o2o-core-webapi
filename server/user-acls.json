@@ -1,0 +1,8 @@
+[
+    {
+        "principalType": "USER",
+        "principalId": "1",
+        "permission": "ALLOW",
+        "property": "*"
+    }
+]

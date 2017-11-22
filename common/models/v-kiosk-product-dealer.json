@@ -1,0 +1,38 @@
+{
+    "name": "VKioskProductDealer",
+    "base": "PersistedModel",
+    "properties": {
+        "ProductCode": {
+            "type": "string"
+        },
+        "DealerCode": {
+            "type": "string"
+        },
+        "DealerName": {
+            "type": "string"
+        },
+        "ProductName": {
+            "type": "string"
+        },
+        "BranchCode": {
+            "type": "string"
+        },
+        "BranchId": {
+            "type": "number"
+        },
+        "BranchName": {
+            "type": "string"
+        },
+        "KioskCode": {
+            "type": "string"
+        },
+        "ProductDealerId": {
+            "type": "number"
+        }
+        
+    },
+    "validations": [],
+    "relations": {},
+    "acls": [],
+    "methods": {}
+}

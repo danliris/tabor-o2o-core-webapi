@@ -18,25 +18,4 @@ module.exports = function (Product) {
     //         Product.Image = path;
     //     }
     // });
-
-    Product.remoteMethod('getAvailable', {
-        accepts: {
-            arg: 'kioskCode',
-            type: 'string'
-        },
-        http: { path: '/available', verb: 'get' },
-        returns: { arg: 'result', type: 'object' }
-    });
-
-    Product.getAvailable = function (data, cb) {
-        return Product.find(
-            {
-                include: {
-                    
-                }
-            }
-        ).then(function (res) {
-            return res;
-        });
-    }
 };

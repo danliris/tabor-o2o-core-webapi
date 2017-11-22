@@ -18,6 +18,9 @@
       "type": "string",
       "required": true
     },
+    "InChargeEmail": {
+      "type": "string"
+    },
     "IdCard": {
       "type": "string"
     },
@@ -39,7 +42,7 @@
     "SelfPickUp": {
       "type": "boolean"
     },
-    "Destination": {
+    "Address": {
       "type": "string"
     },
     "Phone": {
@@ -53,6 +56,18 @@
     },
     "TotalQuantity": {
       "type": "number"
+    },
+    "ShippingDestination": {
+      "type": "string"
+    },
+    "ShippingProductCode": {
+      "type": "string"
+    },
+    "TotalWeight": {
+      "type": "number"
+    },
+    "ShippingDueDay": {
+      "type": "string"
     },
     "TotalShippingFee": {
       "type": "number"

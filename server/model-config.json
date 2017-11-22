@@ -26,14 +26,14 @@
   },
   "RoleMapping": {
     "dataSource": "db",
-    "public": false,
+    "public": true,
     "options": {
       "strictObjectIDCoercion": true
     }
   },
   "Role": {
     "dataSource": "db",
-    "public": false
+    "public": true
   },
   "Product": {
     "dataSource": "db",
@@ -118,5 +118,45 @@
         }
       }
     }
+  },
+  "VProductDealer": {
+    "dataSource": "db",
+    "public": true,
+    "options": {
+      "remoting": {
+        "sharedMethods": {
+          "*": true,
+          "find": true,
+          "findById": true,
+          "findOne": false,
+          "count": true,
+          "exists": true
+        }
+      }
+    }
+  },
+  "VKioskProductDealer": {
+    "dataSource": "db",
+    "public": true,
+    "options": {
+      "remoting": {
+        "sharedMethods": {
+          "*": true,
+          "find": true,
+          "findById": true,
+          "findOne": false,
+          "count": true,
+          "exists": true
+        }
+      }
+    }
+  },
+  "Notification": {
+    "dataSource": "db",
+    "public": true
+  },
+  "Container": {
+    "dataSource": "storage",
+    "public": true
   }
 }
