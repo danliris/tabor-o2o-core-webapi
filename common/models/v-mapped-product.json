@@ -64,6 +64,9 @@
         },
         "Sold": {
             "type": "number"
+        },
+        "MinQuantity": {
+            "type": "number"
         }
     },
     "validations": [],
