@@ -217,10 +217,11 @@ module.exports = function (Order) {
                     return getWalletBalance(order.InChargeEmail)
                         .then(response => {
 
+                            // sementara
                             if (response.statusCode != 200) {
                                 return base.errorResult(response.message);
                             }
-                            if (response.rewardCredit + response.topupCredit < order.TotalPrice + order.TotalShippingFee) {
+                            if (response.result.rewardCredit + response.result.topupCredit < order.TotalPrice + order.TotalShippingFee) {
                                 return base.errorResult('Saldo wallet tidak mencukupi');
                             }
 
