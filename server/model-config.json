@@ -151,6 +151,22 @@
       }
     }
   },
+  "VMappedReport": {
+    "dataSource": "db",
+    "public": true,
+    "options": {
+      "remoting": {
+        "sharedMethods": {
+          "*": true,
+          "find": true,
+          "findById": true,
+          "findOne": false,
+          "count": true,
+          "exists": true
+        }
+      }
+    }
+  },
   "Notification": {
     "dataSource": "db",
     "public": true
