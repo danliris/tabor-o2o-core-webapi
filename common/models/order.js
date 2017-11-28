@@ -218,10 +218,7 @@ module.exports = function (Order) {
                         .then(response => {
 
                             // sementara
-                            if (response.statusCode != 200) {
-                                return base.errorResult(response.message);
-                            }
-                            if (response.result.rewardCredit + response.result.topupCredit < order.TotalPrice + order.TotalShippingFee) {
+                            if (response.rewardCredit + response.topupCredit < order.TotalPrice + order.TotalShippingFee) {
                                 return base.errorResult('Saldo wallet tidak mencukupi');
                             }
 
@@ -240,7 +237,7 @@ module.exports = function (Order) {
 
                                     promises.push(updateProductStock(Order, order));
 
-                                    promises.push(addWalletDebitTransaction(order.InChargeEmail, data.TotalPrice + data.TotalShippingFee));
+                                    promises.push(addWalletDebitTransaction(order.InChargeEmail, order.TotalPrice + order.TotalShippingFee));
 
                                     return Promise.all(promises)
                                         .then(res => {
