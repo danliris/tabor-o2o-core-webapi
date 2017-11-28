@@ -1,9 +1,14 @@
 'use strict';
 
 var fetch = require('node-fetch'),
-    JETEXPRESS_API_URL = process.env.JETEXPRESS_API_URL;
+    JETEXPRESS_API_URL = process.env.JETEXPRESS_API_URL,
+    JETEXPRESS_AUTH_URL = process.env.JETEXPRESS_AUTH_URL,
+    JETEXPRESS_AUTH_EMAIL = process.env.JETEXPRESS_AUTH_EMAIL,
+    JETEXPRESS_AUTH_PASSWORD = process.env.JETEXPRESS_AUTH_PASSWORD,
+    JETEXPRESS_AUTH_CLIENT_ID = process.env.JETEXPRESS_AUTH_CLIENT_ID;
 
 module.exports = function (Order) {
+    var base = Order.base;
 
     Order.remoteMethod('createDraft', {
         accepts: { arg: 'data', type: 'object' },
@@ -86,7 +91,16 @@ module.exports = function (Order) {
     Order.remoteMethod('updatestatusBy3PL', {
         http: { path: '/3PLCheckStatus', verb: 'get' },
         returns: { arg: 'result', type: 'object' }
-    })
+    });
+
+    Order.remoteMethod('getWalletBalance', {
+        accepts: [
+            {
+                arg: 'email', type: 'string'
+            }],
+        http: { path: '/wallets/:email', verb: 'get' },
+        returns: { arg: 'result', type: 'object' }
+    });
 
     Order.createDraft = createDraft;
     Order.updateDraft = updateDraft;
@@ -101,6 +115,8 @@ module.exports = function (Order) {
     Order.notifyDealer = notifyDealer;
     Order.notifyKiosk = notifyKiosk;
     Order.updatestatusBy3PL = updatestatusBy3PL;
+    Order.get3PLToken = get3PLToken;
+    Order.getWalletBalance = getWalletBalance;
 
     function createDraft(data, cb) {
         var promises = [];
@@ -186,54 +202,98 @@ module.exports = function (Order) {
         return getOrderWithDetails(Order, data.OrderCode)
             .then(order => {
                 if (order == null)
-                    throw 'Not found / Invalid Status';
+                    return base.errorResult('Not Found / Invalid Status');
 
                 if (order.IsFullyPaid)
-                    throw 'Order has been fully paid';
+                    return base.errorResult('Order has been fully paid');
 
-                if (order.Status != 'DRAFTED' && order.Status != 'ARRIVED')
-                    throw 'Invalid status';
+                if (order.Status != 'DRAFTED'
+                    && order.Status != 'ARRIVED'
+                    && order.Status != 'REJECTED')
 
-                return order.OrderPayments
-                    .create({
-                        TransactionDate: new Date(),
-                        PaymentMethod: 'CASH',
-                        PaymentType: data.PaymentType,
-                        Amount: data.Amount,
-                        PaidAmount: data.PaidAmount,
-                        Remark: '-'
-                    })
-                    .then(orderPayment => {
-                        var promises = [];
-                        promises.push(updatePaymentStatus(order));
+                    return base.errorResult(`Invalid Status: ${order.Status}`)
 
-                        // kalo lagi mau requested, update stok. pas pelunasan ga perlu update stock
-                        if (order.Status == 'DRAFTED')
-                            promises.push(updateProductStock(Order, order));
+                if (order.Status == 'DRAFTED') {
+                    return getWalletBalance(order.InChargeEmail)
+                        .then(response => {
 
-                        return Promise.all(promises)
-                            .then(res => {
-                                // return getOrderWithDetails(Order, order.Code)
-                                //     .then(order => {
-                                //         return order;
-                                //     });
+                            if (response.statusCode != 200) {
+                                return base.errorResult(response.message);
+                            }
+                            if (response.rewardCredit + response.topupCredit < order.TotalPrice + order.TotalShippingFee) {
+                                return base.errorResult('Saldo wallet tidak mencukupi');
+                            }
 
-                                notifyDealer(data.OrderCode);
+                            return order.OrderPayments
+                                .create({
+                                    TransactionDate: new Date(),
+                                    PaymentMethod: 'CASH',
+                                    PaymentType: data.PaymentType,
+                                    Amount: data.Amount,
+                                    PaidAmount: data.PaidAmount,
+                                    Remark: ''
+                                })
+                                .then(orderPayment => {
+                                    var promises = [];
+                                    promises.push(updatePaymentStatus(order));
 
-                                return order;
-                            });
-                    });
-            })
+                                    promises.push(updateProductStock(Order, order));
+
+                                    promises.push(addWalletDebitTransaction(order.InChargeEmail, data.TotalPrice + data.TotalShippingFee));
+
+                                    return Promise.all(promises)
+                                        .then(res => {
+                                            // return getOrderWithDetails(Order, order.Code)
+                                            //     .then(order => {
+                                            //         return order;
+                                            //     });
+
+                                            notifyDealer(data.OrderCode);
+
+                                            return order;
+                                        });
+                                });
+                        });
+                }
+                else if (order.Status == 'ARRIVED' || order.Status == 'REJECTED') {
+                    return order.OrderPayments
+                        .create({
+                            TransactionDate: new Date(),
+                            PaymentMethod: 'CASH',
+                            PaymentType: data.PaymentType,
+                            Amount: data.Amount,
+                            PaidAmount: data.PaidAmount,
+                            Remark: ''
+                        })
+                        .then(orderPayment => {
+                            var promises = [];
+                            promises.push(updatePaymentStatus(order));
+
+                            return Promise.all(promises)
+                                .then(res => {
+                                    // return getOrderWithDetails(Order, order.Code)
+                                    //     .then(order => {
+                                    //         return order;
+                                    //     });
+
+                                    notifyDealer(data.OrderCode);
+
+                                    return order;
+                                });
+                        });
+                }
+            });
+
     }
 
     function voidDraft(code, cb) {
         return getOrderWithDetails(Order, code)
             .then(order => {
                 if (order == null)
-                    throw 'Not found';
+                    return base.errorResult('Not Found');
 
                 if (order.Status != 'DRAFTED')
-                    throw `Invalid Status: ${order.Status}`;
+                    return base.errorResult(`Invalid Status: ${order.Status}`);
 
                 return updateOrderStatus(order, 'VOIDED');
             });
@@ -243,11 +303,12 @@ module.exports = function (Order) {
         return getOrderWithDetails(Order, code)
             .then(order => {
                 if (order == null)
-                    throw 'Not found';
+                    return base.errorResult('Not Found');
 
                 // mesti udah dikirim sama dealer
                 if (order.Status != 'DELIVERED')
-                    throw `Invalid Status: ${order.Status}`;
+                    return base.errorResult(`Invalid Status: ${order.Status}`);
+
 
                 return updateOrderStatus(order, 'ARRIVED');
             });
@@ -257,20 +318,21 @@ module.exports = function (Order) {
         return getOrderWithDetails(Order, id)
             .then(order => {
                 if (order == null)
-                    throw 'Not found';
+                    return base.errorResult('Not Found');
 
                 if (order.Status != 'DELIVERED' && order.Status != 'PARTIALLY DELIVERED' && order.Status != 'PARTIALLY ARRIVED')
-                    throw `Invalid Status: ${order.Status}`;
+                    return base.errorResult(`Invalid Status: ${order.Status}`);
 
                 // kalo ternyata dia minta dianterin ke rumah
                 if (!order.SelfPickUp)
-                    throw `This order should be delivered to customer`;
+                    return base.errorResult(`This order should be delivered to customer`);
 
                 // update orderdetail
                 var orderDetail = order.OrderDetails().find(x => x.Code == detailId);
 
                 if (orderDetail.Status != 'DELIVERED')
-                    throw `Invalid Detail Status: ${orderDetail.Status}`;
+                    return base.errorResult(`Invalid Detail Status: ${orderDetail.Status}`);
+
 
                 return updateOrderDetailStatus(orderDetail, 'ARRIVED');
             })
@@ -301,19 +363,19 @@ module.exports = function (Order) {
         return getOrderWithDetails(Order, id)
             .then(order => {
                 if (order == null)
-                    throw 'Not found';
+                    return base.errorResult('Not Found');
 
-                if (order.Status != 'DELIVERED' && order.Status != 'PARTIALLY DELIVERED')
-                    throw `Invalid Status: ${order.Status}`;
+                if (order.Status != 'DELIVERED' && order.Status != 'PARTIALLY DELIVERED' && order.Status == 'COMPLETED')
+                    return base.errorResult(`Invalid Status: ${order.Status}`);
 
                 if (order.SelfPickUp)
-                    throw `This order should be delivered to outlet`;
+                    return base.errorResult(`This order should be delivered to outlet`);
 
                 // update orderdetail
                 var orderDetail = order.OrderDetails().find(x => x.Code == detailId);
 
                 if (orderDetail.Status != 'DELIVERED')
-                    throw `Invalid Detail Status: ${orderDetail.Status}`;
+                    return base.errorResult(`Invalid Detail Status: ${orderDetail.Status}`);
 
                 return updateOrderDetailStatus(orderDetail, 'COMPLETED');
             })
@@ -327,6 +389,7 @@ module.exports = function (Order) {
                 for (var i = 0; i < totalDetail; i++) {
                     if (order.OrderDetails()[i].Status == 'COMPLETED'
                         || order.OrderDetails()[i].Status == 'REJECTED'
+                        || order.OrderDetails()[i].Status == 'REFUNDED'
                         || order.OrderDetails()[i].Status == 'VOIDED')
                         totalClosed++;
                 }
@@ -344,12 +407,66 @@ module.exports = function (Order) {
         return getOrderWithDetails(Order, code)
             .then(order => {
                 if (order == null)
-                    throw 'Not found';
+                    return base.errorResult('Not found');
 
-                if (order.Status != 'ARRIVED')
-                    throw `Invalid Status: ${order.Status}`;
+                if (order.Status != 'ARRIVED' && order.Status != 'REJECTED')
+                    return base.errorResult(`Invalid Status: ${order.Status}`);
 
-                return updateOrderStatus(order, 'COMPLETED');
+                var promises = [];
+                var currentDate = new Date();
+
+                var refundAmount = 0;
+                var refundPayment = order.OrderPayments().find(t => t.PaymentType == 'REFUNDMENT');
+
+                if (refundPayment)
+                    refundAmount = refundPayment.PaidAmount;
+
+                // // check any rejected
+                // if (order.IsFullyPaid && order.Status == 'REJECTED') {
+                //     refundAmount = order.OrderDetails().reduce((a, b) => {
+                //         return a + ((b.Status == 'REJECTED' || b.Status == 'REFUNDED') ? b.Price : 0);
+                //     }, 0);
+
+                //     if (refundAmount > 0) {
+                //         refundAmount += order.TotalShippingFee;
+
+                //         promises.push(order.OrderPayments.create({
+                //             TransactionDate: currentDate,
+                //             PaymentMethod: 'CASH',
+                //             PaymentType: 'REFUNDMENT',
+                //             Amount: refundAmount,
+                //             PaidAmount: refundAmount,
+                //             Remark: 'Barang tidak tersedia'
+                //         }));
+                //     }
+                // }
+
+                if (refundAmount > 0) {
+                    promises.push(addTopUpCredit(order.InChargeEmail, refundAmount));
+                }
+
+                promises.push(order.updateAttribute('Status', order.Status == 'REJECTED' ? 'REFUNDED' : 'COMPLETED'));
+
+                order.OrderDetails()
+                    .filter(t => t.Status != 'VOIDED')
+                    .forEach(detail => {
+                        let status = detail.Status == 'REJECTED' ? 'REFUNDED' : 'COMPLETED';
+
+                        promises.push(detail.updateAttribute('Status', status));
+
+                        promises.push(detail.OrderTracks.create({
+                            OrderCode: detail.OrderCode,
+                            OrderDetailCode: detail.Code,
+                            TrackDate: currentDate,
+                            Status: status,
+                            Remark: ''
+                        }));
+                    });
+
+                return Promise.all(promises)
+                    .then(res => {
+                        return res[0];
+                    });
             });
     }
 
@@ -382,11 +499,16 @@ module.exports = function (Order) {
 
     function updatePaymentStatus(order) {
         var totalPaidAmount = order.OrderPayments().reduce(function (a, b) {
-            return b.PaidAmount + a;
+            return a + b.PaidAmount;
         }, 0);
 
+        var refundValue = order.OrderDetails().reduce((a, b) => {
+            return a + (b.Status == 'REJECTED' ? b.Price : 0);
+        }, 0);
+
+        var totalShouldBePaid = order.TotalPrice + order.TotalShippingFee - refundValue;
         // lunas?
-        var isFullyPaid = totalPaidAmount >= order.TotalPrice + order.TotalShippingFee;
+        var isFullyPaid = totalPaidAmount >= totalShouldBePaid;
 
         return order.updateAttribute('IsFullyPaid', isFullyPaid)
             .then(res => {
@@ -423,7 +545,7 @@ module.exports = function (Order) {
             OrderDetailCode: orderDetail.Code,
             TrackDate: currentDate,
             Status: status,
-            Remark: '-'
+            Remark: ''
         }));
 
         return Promise.all(promises)
@@ -440,19 +562,25 @@ module.exports = function (Order) {
 
         if (withDetails) {
             // kalo VOIDED, REJECTED jangan diupdate lagi. anggap sudah kelar urusannya
-            promises.push(order.OrderDetails.updateAll({ Status: { nin: ['VOIDED', 'REJECTED'] } }, { 'Status': status }, function (err, info, count) { }));
+            promises.push(order.OrderDetails.updateAll({ Status: { nin: ['VOIDED', 'REJECTED', 'REFUNDED'] } }, { 'Status': status }, function (err, info, count) { }));
 
             for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
-                promises.push(
-                    order.OrderDetails()[i].OrderTracks
-                        .create({
-                            OrderCode: order.OrderDetails()[i].OrderCode,
-                            OrderDetailCode: order.OrderDetails()[i].Code,
-                            TrackDate: currentDate,
-                            Status: status,
-                            Remark: '-'
-                        })
-                );
+
+                // kalo voided / rejected jangan diupdate nyong
+                if (order.OrderDetails()[i].Status != 'VOIDED'
+                    && order.OrderDetails()[i].Status != 'REJECTED'
+                    && order.OrderDetails()[i].Status != 'REFUNDED')
+
+                    promises.push(
+                        order.OrderDetails()[i].OrderTracks
+                            .create({
+                                OrderCode: order.OrderDetails()[i].OrderCode,
+                                OrderDetailCode: order.OrderDetails()[i].Code,
+                                TrackDate: currentDate,
+                                Status: status,
+                                Remark: ''
+                            })
+                    );
             }
         }
 
@@ -553,7 +681,7 @@ module.exports = function (Order) {
                             && x.DealerCode == detail.DealerCode);
 
                     if (detail.Quantity > product.Quantity)
-                        throw 'Insufficient stocks.';
+                        return base.errorResult('Insufficient stocks.');
 
                     var orderDetail = {
                         Code: !isUpdate ? idGenerator.generate(12) : detail.Code,
@@ -626,6 +754,11 @@ module.exports = function (Order) {
                         .map(t => t.Quantity * t.Product.Weight) // bikin array baru yang isinya berat * quantity << weight ini udah calculated mesti retrieve dari db lagi
                         .reduce((a, b) => { return a + b }); // total berat
 
+                    data.OrderDetails.filter(t => t.DealerCode == dealerCodes[i])
+                        .forEach(detail => {
+                            detail.ShippingFee = pricingOption.calculationResult;
+                        });
+
                     // pembulatan
                     if (weight == 0)
                         weight = 0;
@@ -644,11 +777,11 @@ module.exports = function (Order) {
     }
 
     function notifyKiosk(orderCode) {
-        // var base = Order.base;
+
         return Order.findOne({ where: { Code: orderCode } })
             .then(order => {
                 if (!order)
-                    throw 'Not Found';
+                    return base.errorResult('Not Found');
 
                 var message = `${order.Status} - ${order.Code}`;
 
@@ -680,18 +813,18 @@ module.exports = function (Order) {
             .then(notification => {
                 return notification;
             })
-            .catch(err => { throw err; })
+            .catch(err => { return base.errorResult(err); })
             .finally(() => {
                 return true;
             });
     }
 
     function notifyDealer(orderCode) {
-        var base = Order.base;
+
         return getOrderWithDetails(Order, orderCode)
             .then(order => {
                 if (!order)
-                    throw 'Not Found';
+                    return base.errorResult('Not Found');
 
                 var dealerCodes = Array.from(new Set(order.OrderDetails().map(t => t.DealerCode)));
 
@@ -710,7 +843,7 @@ module.exports = function (Order) {
                     base.sendNotification(base.grindData(message, payload, filters));
                 });
             })
-            .catch(err => { throw err; })
+            .catch(err => { return base.errorResult(err); })
             .finally(() => {
                 return true;
             });
@@ -724,7 +857,11 @@ module.exports = function (Order) {
                 OrderDetails: 'OrderDetailDeliveries'
             },
             where: {
-                Status: 'DELIVERED',
+                or: {
+                    Status: 'PARTIALLY DELIVERED',
+                    Status: 'DELIVERED',
+                    Status: 'PARTIALLY COMPLETED'
+                },
                 SelfPickUp: false
             }
         }).then(orders => {
@@ -767,7 +904,7 @@ module.exports = function (Order) {
                 return res.json();
             })
             .catch(err => {
-                throw err;
+                return base.errorResult(err);
             });
     }
 
@@ -777,7 +914,7 @@ module.exports = function (Order) {
                 return res.json();
             })
             .catch(err => {
-                throw err;
+                return base.errorResult(err);
             });
     }
 
@@ -790,17 +927,78 @@ module.exports = function (Order) {
                 return json.weightRoundingLimit;
             })
             .catch(err => {
-                throw err;
+                return base.errorResult(err);
             });
     }
 
     function checkStatusFrom3PL(bookingCode) {
-        // return fetch(`http://localhost:50663/v1/tracks/waybills-by-booking-number/${bookingCode}`)
-        //     .then(res => { return res.json(); })
         return fetch(`${JETEXPRESS_API_URL}/v1/tracks/waybills-by-booking-number/${bookingCode}`)
             .then(res => { return res.json(); })
             .catch(err => {
-                throw err;
+                return base.errorResult(err);
+            });
+    }
+    //endregion
+
+    //region Wallet
+    function get3PLToken() {
+        // cek kalo ada dan belum expired
+        if (global.o2oJetAuthentication)
+            return Promise.resolve(global.o2oJetAuthentication);
+
+        var options = {
+            method: 'POST',
+            headers: { 'content-type': 'application/x-www-form-urlencoded' },
+            body: `username=${JETEXPRESS_AUTH_EMAIL}&password=${JETEXPRESS_AUTH_PASSWORD}&client_id=${JETEXPRESS_AUTH_CLIENT_ID}&grant_type=password`
+        };
+
+        return fetch(`${JETEXPRESS_AUTH_URL}/oauth/token`, options)
+            .then(res => {
+                return res.json();
+            })
+            .then(res => {
+                global.o2oJetAuthentication = res;
+                return res;
+            })
+            .catch(err => {
+                return base.errorResult(err);
+            });
+    }
+
+    function getWalletBalance(email) {
+        // get token
+        return get3PLToken()
+            .then(res => {
+                return fetch(`${JETEXPRESS_API_URL}/v1/wallets?email=${email}`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `${res.token_type} ${res.access_token}` }
+                });
+            })
+            .then(walletResponse => {
+                return walletResponse.json();
+            })
+            .then(wallet => {
+                return wallet;
+            });
+    }
+
+    function addWalletDebitTransaction(email, nominal) {
+        return get3PLToken()
+            .then(res => {
+                return fetch(`${JETEXPRESS_API_URL}/v1/wallets/transactions/debit?email=${email}&nominal=${nominal}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `${res.token_type} ${res.access_token}` }
+                });
+            });
+    }
+
+    function addTopUpCredit(email, nominal) {
+        return get3PLToken()
+            .then(res => {
+                return fetch(`${JETEXPRESS_API_URL}/v1/wallets/topups/credit?email=${email}&nominal=${nominal}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `${res.token_type} ${res.access_token}` }
+                });
             });
     }
     //endregion
