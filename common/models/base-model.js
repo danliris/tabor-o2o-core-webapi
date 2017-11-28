@@ -1,10 +1,12 @@
 'use strict';
-var ONESIGNAL_APP_ID = '92a6e902-5ca5-4b08-ba0b-1d61bea59c7f',
-    ONESIGNAL_API_KEY = 'ZDYxYWQ0YTAtYTI0Zi00NjllLTgzOGMtMjg1OWM5MWJjZWYy';
+
+var ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID,
+    ONESIGNAL_API_KEY = process.env.ONESIGNAL_API_KEY;
 
 module.exports = function (BaseModel) {
     BaseModel.grindData = grindData;
     BaseModel.sendNotification = sendNotification;
+    BaseModel.errorResult = errorResult;
 
     function grindData(message, payload, filters) {
         return {
@@ -38,7 +40,7 @@ module.exports = function (BaseModel) {
                 console.log(JSON.parse(data));
             });
         });
-        
+
         req.on('error', function (e) {
             console.log("ERROR:");
             console.log(e);
@@ -46,5 +48,13 @@ module.exports = function (BaseModel) {
 
         req.write(JSON.stringify(data));
         req.end();
+    }
+
+    function errorResult(message) {
+        var error = new Error();
+        error.status = 400;
+        error.message = message;
+
+        throw error;
     }
 };
