@@ -204,7 +204,7 @@ module.exports = function (Order) {
                 if (order == null)
                     return base.errorResult('Not Found / Invalid Status');
 
-                if (order.IsFullyPaid)
+                if (order.Status != 'REJECTED' && order.IsFullyPaid)
                     return base.errorResult('Order has been fully paid');
 
                 if (order.Status != 'DRAFTED'
@@ -941,8 +941,10 @@ module.exports = function (Order) {
     //region Wallet
     function get3PLToken() {
         // cek kalo ada dan belum expired
-        if (global.o2oJetAuthentication)
-            return Promise.resolve(global.o2oJetAuthentication);
+        if (global.o2oJetAuthentication) {
+            if ((new Date()) < global.o2oJetAuthentication.expiredAt)
+                return Promise.resolve(global.o2oJetAuthentication);
+        }
 
         var options = {
             method: 'POST',
@@ -956,6 +958,7 @@ module.exports = function (Order) {
             })
             .then(res => {
                 global.o2oJetAuthentication = res;
+                global.o2oJetAuthentication.expiredAt = (new Date()).getTime() + res.expires_in;
                 return res;
             })
             .catch(err => {
