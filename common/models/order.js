@@ -855,11 +855,11 @@ module.exports = function (Order) {
                 OrderDetails: 'OrderDetailDeliveries'
             },
             where: {
-                or: {
-                    Status: 'PARTIALLY DELIVERED',
-                    Status: 'DELIVERED',
-                    Status: 'PARTIALLY COMPLETED'
-                },
+                or: [
+                    { Status: 'PARTIALLY DELIVERED' },
+                    { Status: 'DELIVERED' },
+                    { Status: 'PARTIALLY COMPLETED' }
+                ],
                 SelfPickUp: false
             }
         }).then(orders => {
@@ -875,13 +875,14 @@ module.exports = function (Order) {
                             .OrderDetailDeliveries()
                             .map(t => t.PickUpItemCode);
 
-                        promises.push(checkStatusFrom3PL(bookingCode)
-                            .then(waybill => {
-                                if (waybill.status != 'DELIVERED')
-                                    return `Order Detail: ${orderDetail.Code}, Booking Code: ${bookingCode} has not been delivered yet.`;
-
-                                return setOrderDetailCompletedBy3PL(orderDetail.OrderCode, orderDetail.Code);
-                            }));
+                        if (bookingCode.length > 0)
+                            promises.push(checkStatusFrom3PL(bookingCode)
+                                .then(waybill => {
+                                    if (waybill.status == 'DELIVERED')
+                                        return setOrderDetailCompletedBy3PL(orderDetail.OrderCode, orderDetail.Code);
+                                    else
+                                        return Promise.resolve(order);
+                                }));
 
                     });
             });
@@ -889,7 +890,7 @@ module.exports = function (Order) {
 
             return Promise.all(promises)
                 .then(responses => {
-                    console.log(responses);
+                    return responses;
                 });
 
         });
