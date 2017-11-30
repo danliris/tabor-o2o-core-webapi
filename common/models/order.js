@@ -417,7 +417,7 @@ module.exports = function (Order) {
                 var refundPayment = order.OrderPayments().find(t => t.PaymentType == 'REFUNDMENT');
 
                 if (refundPayment)
-                    refundAmount = refundPayment.PaidAmount;
+                    refundAmount = Math.abs(refundPayment.PaidAmount);
 
                 // // check any rejected
                 // if (order.IsFullyPaid && order.Status == 'REJECTED') {
