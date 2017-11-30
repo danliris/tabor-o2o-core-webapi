@@ -204,9 +204,6 @@ module.exports = function (Order) {
                 if (order == null)
                     return base.errorResult('Not Found / Invalid Status');
 
-                if (order.Status != 'REJECTED' && order.IsFullyPaid)
-                    return base.errorResult('Order has been fully paid');
-
                 if (order.Status != 'DRAFTED'
                     && order.Status != 'ARRIVED'
                     && order.Status != 'REJECTED')
@@ -214,6 +211,9 @@ module.exports = function (Order) {
                     return base.errorResult(`Invalid Status: ${order.Status}`)
 
                 if (order.Status == 'DRAFTED') {
+                    if (order.IsFullyPaid)
+                        return base.errorResult('Order has been fully paid');
+
                     return getWalletBalance(order.InChargeEmail)
                         .then(response => {
 
@@ -274,7 +274,7 @@ module.exports = function (Order) {
                                     //         return order;
                                     //     });
 
-                                    notifyDealer(data.OrderCode);
+                                    // notifyDealer(data.OrderCode);
 
                                     return order;
                                 });
@@ -440,7 +440,7 @@ module.exports = function (Order) {
                 // }
 
                 if (refundAmount > 0) {
-                    promises.push(addTopUpCredit(order.InChargeEmail, refundAmount));
+                    promises.push(refundWallet(order.InChargeEmail, refundAmount));
                 }
 
                 promises.push(order.updateAttribute('Status', order.Status == 'REJECTED' ? 'REFUNDED' : 'COMPLETED'));
@@ -994,10 +994,20 @@ module.exports = function (Order) {
             });
     }
 
-    function addTopUpCredit(email, nominal) {
+    // function addTopUpCredit(email, nominal) {
+    //     return get3PLToken()
+    //         .then(res => {
+    //             return fetch(`${JETEXPRESS_API_URL}/v1/wallets/topups/credit?email=${email}&nominal=${nominal}`, {
+    //                 method: 'POST',
+    //                 headers: { 'Authorization': `${res.token_type} ${res.access_token}` }
+    //             });
+    //         });
+    // }
+
+    function refundWallet(email, nominal) {
         return get3PLToken()
             .then(res => {
-                return fetch(`${JETEXPRESS_API_URL}/v1/wallets/topups/credit?email=${email}&nominal=${nominal}`, {
+                return fetch(`${JETEXPRESS_API_URL}/v1/wallets/transactions/refund?email=${email}&nominal=${nominal}`, {
                     method: 'POST',
                     headers: { 'Authorization': `${res.token_type} ${res.access_token}` }
                 });
