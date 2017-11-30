@@ -27,7 +27,7 @@
             "type": "string"
         },
         "RequestDate": {
-            "type": "string"
+            "type": "date"
         }
     },
     "validations": [],
