@@ -1,7 +1,6 @@
 {
   "name": "Order",
-  "plural": "Order",
-  "base": "PersistedModel",
+  "base": "BaseModel",
   "idInjection": false,
   "options": {
     "validateUpsert": true
@@ -13,75 +12,86 @@
     "Code": {
       "type": "string",
       "id": true,
-       "required": true
-      
+      "required": true
     },
-    "DP": {
-      "type": "number",
-       "required": true
-      
+    "KioskCode": {
+      "type": "string",
+      "required": true
     },
-    "Discount": {
-      "type": "number",
-       "required": true
-      
+    "InChargeEmail": {
+      "type": "string"
     },
-    "DiscountNominal": {
-      "type": "number",
-       "required": true
-      
+    "IdCard": {
+      "type": "string"
     },
-    "TotalPrice": {
-      "type": "number",
-       "required": true
-      
+    "Name": {
+      "type": "string"
+    },
+    "Email": {
+      "type": "string"
     },
     "RequestDate": {
-      "type": "string",
-       "required": true
-      
+      "type": "date"
     },
-    "DeliveryDate": {
-      "type": "date",
-       "required": true
-      
+    "Latitude": {
+      "type": "number"
     },
-    "TotalQty": {
-      "type": "number",
-       "required": true
-      
+    "Longitude": {
+      "type": "number"
     },
-    "Destination": {
-      "type": "string",
-       "required": true
-      
+    "SelfPickUp": {
+      "type": "boolean"
+    },
+    "Address": {
+      "type": "string"
     },
     "Phone": {
-      "type": "string",
-       "required": true
-      
+      "type": "string"
+    },
+    "PIN": {
+      "type": "string"
+    },
+    "DP": {
+      "type": "number"
+    },
+    "TotalQuantity": {
+      "type": "number"
+    },
+    "ShippingDestination": {
+      "type": "string"
+    },
+    "ShippingProductCode": {
+      "type": "string"
+    },
+    "TotalWeight": {
+      "type": "number"
+    },
+    "ShippingDueDay": {
+      "type": "string"
+    },
+    "TotalShippingFee": {
+      "type": "number"
+    },
+    "TotalPrice": {
+      "type": "number"
     },
     "Status": {
-      "type": "string",
-       "required": true
-      
+      "type": "string"
     },
-    "PaymentType": {
-      "type": "string",
-       "required": true
-      
+    "IsFullyPaid": {
+      "type": "boolean"
     }
   },
   "validations": [],
   "relations": {
-    "Dealer": {
-      "type": "belongsTo",
-      "model": "Dealer",
-      "foreignKey": "DealerCode"
-    },
-    "orderDetails": {
+    "OrderDetails": {
       "type": "hasMany",
       "model": "OrderDetail",
+      "foreignKey": "OrderCode"
+    },
+    "OrderPayments": {
+      "type": "hasMany",
+      "model": "OrderPayment",
       "foreignKey": "OrderCode"
     },
     "Kiosk": {

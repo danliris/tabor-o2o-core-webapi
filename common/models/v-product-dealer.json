@@ -1,0 +1,32 @@
+{
+    "name": "VProductDealer",
+    "base": "PersistedModel",
+    "properties": {
+        "ProductCode": {
+            "type": "string"
+        },
+        "DealerCode": {
+            "type": "string"
+        },
+        "DealerName": {
+            "type": "string"
+        },
+        "ProductName": {
+            "type": "string"
+        },
+        "BranchCode": {
+            "type": "string"
+        },
+        "BranchId": {
+            "type": "string"
+        },
+        "BranchName": {
+            "type": "string"
+        }
+        
+    },
+    "validations": [],
+    "relations": {},
+    "acls": [],
+    "methods": {}
+}

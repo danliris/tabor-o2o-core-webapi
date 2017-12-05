@@ -1,0 +1,32 @@
+{
+  "name": "OrderDetailIMEI",
+  "plural": "OrderDetailIMEIs",
+  "base": "BaseModel",
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins": {
+    "TimeStamp": {}
+  },
+  "properties": {
+    "OrderDetailCode": {
+      "type": "string",
+      "required": true
+    },
+    "IMEI": {
+      "type": "string",
+      "required": true
+    }
+  },
+  "validations": [],
+  "relations": {
+    "OrderDetail": {
+      "type": "belongsTo",
+      "model": "OrderDetail",
+      "foreignKey": "OrderDetailCode"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

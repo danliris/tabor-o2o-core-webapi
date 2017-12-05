@@ -1,6 +1,6 @@
 {
-  "name": "Brand",
-  "plural": "Brands",
+  "name": "Configuration",
+  "plural": "Configurations",
   "base": "BaseModel",
   "idInjection": false,
   "options": {
@@ -22,24 +22,13 @@
     "Description": {
       "type": "string"
     },
-    "Logo": {
+    "Value": {
       "type": "string",
       "required": true
     }
   },
   "validations": [],
-  "relations": {
-    "Products": {
-      "type": "hasMany",
-      "model": "Product",
-      "foreignKey": "BrandCode"
-    },
-    "ProductCategories": {
-      "type": "hasMany",
-      "model": "ProductCategory",
-      "foreignKey": "BrandCode"
-    }
-  },
+  "relations": {},
   "acls": [],
   "methods": {}
 }

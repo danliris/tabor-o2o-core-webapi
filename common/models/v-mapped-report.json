@@ -1,0 +1,37 @@
+{
+    "name": "VMappedReport",
+    "base": "PersistedModel",
+    "properties": {
+        "KioskCode": {
+            "type": "string"
+        },
+        "DealerCode": {
+            "type": "string"
+        },
+        "DealerName": {
+            "type": "string"
+        },
+        "OrderCode": {
+            "type": "string"
+        },
+        "ProductName": {
+            "type": "string"
+        },
+        "Quantity": {
+            "type": "number"
+        },
+        "Price": {
+            "type": "number"
+        },
+        "Status": {
+            "type": "string"
+        },
+        "RequestDate": {
+            "type": "date"
+        }
+    },
+    "validations": [],
+    "relations": {},
+    "acls": [],
+    "methods": {}
+}

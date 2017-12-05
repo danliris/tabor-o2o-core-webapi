@@ -26,41 +26,153 @@
   },
   "RoleMapping": {
     "dataSource": "db",
-    "public": false,
+    "public": true,
     "options": {
       "strictObjectIDCoercion": true
     }
   },
   "Role": {
     "dataSource": "db",
-    "public": false
+    "public": true
   },
   "Product": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "Brand": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "Dealer": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "Order": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
     "public": true
   },
   "OrderDetail": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
+    "public": true
+  },
+  "OrderDetailIMEI": {
+    "dataSource": "db",
+    "public": true
+  },
+  "OrderDetailDelivery": {
+    "dataSource": "db",
+    "public": true
+  },
+  "OrderTrack": {
+    "dataSource": "db",
+    "public": true
+  },
+  "OrderPayment": {
+    "dataSource": "db",
     "public": true
   },
   "ProductDealer": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
+    "public": true
+  },
+  "ProductCategory": {
+    "dataSource": "db",
+    "public": true
+  },
+  "Product_productCategory": {
+    "dataSource": "db",
     "public": true
   },
   "Kiosk": {
-    "dataSource": "sql-azure",
+    "dataSource": "db",
+    "public": true
+  },
+  "KioskUser": {
+    "dataSource": "db",
+    "public": true
+  },
+  "KioskProductDealer": {
+    "dataSource": "db",
+    "public": true
+  },
+  "DealerUser": {
+    "dataSource": "db",
+    "public": true
+  },
+  "Configuration": {
+    "dataSource": "db",
+    "public": true
+  },
+  "VMappedProduct": {
+    "dataSource": "db",
+    "public": true,
+    "options": {
+      "remoting": {
+        "sharedMethods": {
+          "*": false,
+          "find": true,
+          "findById": true,
+          "findOne": true,
+          "count": true,
+          "exists": true
+        }
+      }
+    }
+  },
+  "VProductDealer": {
+    "dataSource": "db",
+    "public": true,
+    "options": {
+      "remoting": {
+        "sharedMethods": {
+          "*": true,
+          "find": true,
+          "findById": true,
+          "findOne": false,
+          "count": true,
+          "exists": true
+        }
+      }
+    }
+  },
+  "VKioskProductDealer": {
+    "dataSource": "db",
+    "public": true,
+    "options": {
+      "remoting": {
+        "sharedMethods": {
+          "*": true,
+          "find": true,
+          "findById": true,
+          "findOne": false,
+          "count": true,
+          "exists": true
+        }
+      }
+    }
+  },
+  "VMappedReport": {
+    "dataSource": "db",
+    "public": true,
+    "options": {
+      "remoting": {
+        "sharedMethods": {
+          "*": true,
+          "find": true,
+          "findById": true,
+          "findOne": false,
+          "count": true,
+          "exists": true
+        }
+      } 
+    }
+  },
+  "Notification": {
+    "dataSource": "db",
+    "public": true
+  },
+  "Container": {
+    "dataSource": "storage",
     "public": true
   }
 }

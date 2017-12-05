@@ -1,7 +1,7 @@
 {
   "name": "OrderDetail",
-  "plural": "orderDetails",
-  "base": "PersistedModel",
+  "plural": "OrderDetails",
+  "base": "BaseModel",
   "idInjection": false,
   "options": {
     "validateUpsert": true
@@ -13,25 +13,48 @@
     "Code": {
       "type": "string",
       "id": true,
-       "required": true
-      
+      "required": true
     },
-    "IsRetur": {
-      "type": "boolean",
-       "required": true
+    "OrderCode": {
+      "type": "string",
+      "required": true
+    },
+    "ProductCode": {
+      "type": "string",
+      "required": true
+    },
+    "DealerCode": {
+      "type": "string",
+      "required": true
+    },
+    "Quantity": {
+      "type": "number",
+      "required": true
     },
     "Price": {
       "type": "number",
-       "required": true
+      "required": true
     },
-    "IMEI": {
-      "type": "string",
-       "required": true
+    "Weight": {
+      "type": "number"
+    },
+    "ShippingFee": {
+      "type": "number"
+    },
+    "DPNominal": {
+      "type": "number"
+    },
+    "IsRetur": {
+      "type": "boolean",
+      "required": true
     },
     "Status": {
       "type": "string",
-       "required": true
-      
+      "required": true
+    },
+    "RequestDate": {
+      "type": "date",
+      "required": true
     }
   },
   "validations": [],
@@ -45,6 +68,21 @@
       "type": "belongsTo",
       "model": "Product",
       "foreignKey": "ProductCode"
+    },
+    "OrderTracks": {
+      "type": "hasMany",
+      "model": "OrderTrack",
+      "foreignKey": "OrderDetailCode"
+    },
+    "OrderDetailIMEIs": {
+      "type": "hasMany",
+      "model": "OrderDetailIMEI",
+      "foreignKey": "OrderDetailCode"
+    },
+    "OrderDetailDeliveries": {
+      "type": "hasMany",
+      "model": "OrderDetailDelivery",
+      "foreignKey": "OrderDetailCode"
     }
   },
   "acls": [],

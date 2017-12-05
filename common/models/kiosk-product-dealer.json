@@ -1,0 +1,35 @@
+{
+  "name": "KioskProductDealer",
+  "plural": "KioskProductDealers",
+  "base": "BaseModel",
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins": {
+    "TimeStamp": {}
+  },
+  "properties": {
+    "KioskCode": {
+      "type": "string"
+    },
+    "ProductDealerId": {
+      "type": "number"
+    }
+  },
+  "validations": [],
+  "relations": {
+    "Kiosk": {
+      "type": "belongsTo",
+      "model": "Kiosk",
+      "foreignKey": "KioskCode"
+    },
+    "ProductDealer": {
+      "type": "belongsTo",
+      "model": "ProductDealer",
+      "foreignKey": "ProductDealerId"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

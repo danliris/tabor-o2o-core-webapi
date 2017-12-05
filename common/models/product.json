@@ -1,6 +1,6 @@
 {
   "name": "Product",
-  "base": "PersistedModel",
+  "base": "BaseModel",
   "idInjection": false,
   "options": {
     "validateUpsert": true
@@ -16,7 +16,7 @@
     },
     "SKU": {
       "type": "string",
-      "required": true
+      "required": false
     },
     "Name": {
       "type": "string",
@@ -30,26 +30,55 @@
       "type": "number",
       "required": true
     },
+    "DP": {
+      "type": "number",
+      "required": true
+    },
     "Specification": {
       "type": "string",
+      "required": true
+    },
+    "Image": {
+      "type": "string",
+      "required": true
+    },
+    "Weight": {
+      "type": "number",
+      "required": true
+    },
+    "Width": {
+      "type": "number",
+      "required": true
+    },
+    "Height": {
+      "type": "number",
+      "required": true
+    },
+    "Length": {
+      "type": "number",
       "required": true
     }
   },
   "validations": [],
   "relations": {
-    "brand": {
+    "Brand": {
       "type": "belongsTo",
       "model": "Brand",
       "foreignKey": "BrandCode"
     },
-    "OrderDetail": {
+    "OrderDetails": {
       "type": "hasMany",
       "model": "OrderDetail",
       "foreignKey": "ProductCode"
     },
-    "ProductDealer": {
+    "ProductDealers": {
       "type": "hasMany",
       "model": "ProductDealer",
+      "foreignKey": "ProductCode"
+    },
+    "Product_productCategories": {
+      "type": "hasMany",
+      "model": "Product_productCategory",
       "foreignKey": "ProductCode"
     }
   },

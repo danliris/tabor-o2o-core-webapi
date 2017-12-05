@@ -1,0 +1,54 @@
+{
+  "name": "OrderPayment",
+  "plural": "OrderPayments",
+  "base": "BaseModel",
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins": {
+    "TimeStamp": {}
+  },
+  "properties": {
+    "OrderCode": {
+      "type": "string",
+      "required": true
+    },
+    "PaymentMethod": {
+      "type": "string",
+      "required": true
+    },
+    "PaymentType": {
+      "type": "string",
+      "required": true
+    },
+    "TransactionDate": {
+      "type": "date",
+      "required": true
+    },
+    "Amount": {
+      "type": "number",
+      "required": true
+    },
+    "PaidAmount": {
+      "type": "number",
+      "required": true
+    },
+    "Remark": {
+      "type": "string"
+    },
+    "CreatedDate": {
+      "type": "date"
+    }
+  },
+  "validations": [],
+  "relations": {
+    "Order": {
+      "type": "belongsTo",
+      "model": "Order",
+      "foreignKey": "OrderCode"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

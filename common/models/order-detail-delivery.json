@@ -1,6 +1,6 @@
 {
-  "name": "Brand",
-  "plural": "Brands",
+  "name": "OrderDetailDelivery",
+  "plural": "OrderDetailDeliveries",
   "base": "BaseModel",
   "idInjection": false,
   "options": {
@@ -10,34 +10,30 @@
     "TimeStamp": {}
   },
   "properties": {
-    "Code": {
-      "type": "string",
-      "id": true,
-      "required": true
-    },
-    "Name": {
+    "OrderDetailCode": {
       "type": "string",
       "required": true
     },
-    "Description": {
-      "type": "string"
+    "PickUpCode": {
+      "type": "string",
+      "required": true
     },
-    "Logo": {
+    "PickUpItemCode": {
+      "type": "string",
+      "required": true
+    },
+    "UnlockCode": {
       "type": "string",
       "required": true
     }
+    
   },
   "validations": [],
   "relations": {
-    "Products": {
-      "type": "hasMany",
-      "model": "Product",
-      "foreignKey": "BrandCode"
-    },
-    "ProductCategories": {
-      "type": "hasMany",
-      "model": "ProductCategory",
-      "foreignKey": "BrandCode"
+    "OrderDetail": {
+      "type": "belongsTo",
+      "model": "OrderDetail",
+      "foreignKey": "OrderDetailCode"
     }
   },
   "acls": [],

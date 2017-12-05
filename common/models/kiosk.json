@@ -1,6 +1,7 @@
 {
   "name": "Kiosk",
-  "base": "PersistedModel",
+  "plural": "Kiosks",
+  "base": "BaseModel",
   "idInjection": false,
   "options": {
     "validateUpsert": true
@@ -11,10 +12,10 @@
   "properties": {
     "Code": {
       "type": "string",
-      "id":true,
+      "id": true,
       "required": true
     },
-    "Nama": {
+    "Name": {
       "type": "string",
       "required": true
     },
@@ -53,9 +54,19 @@
   },
   "validations": [],
   "relations": {
-    "Order": {
+    "Orders": {
       "type": "hasMany",
       "model": "Order",
+      "foreignKey": "KioskCode"
+    },
+    "KioskProductDealers": {
+      "type": "hasMany",
+      "model": "KioskProductDealer",
+      "foreignKey": "KioskCode"
+    },
+    "KioskUsers": {
+      "type": "hasMany",
+      "model": "KioskUser",
       "foreignKey": "KioskCode"
     }
   },
