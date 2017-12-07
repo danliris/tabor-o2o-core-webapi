@@ -11,13 +11,21 @@ module.exports = function (Order) {
     var base = Order.base;
 
     Order.remoteMethod('createDraft', {
-        accepts: { arg: 'data', type: 'object' },
+        // accepts: { arg: 'data', type: 'object' },
+        accepts: [
+            { arg: 'data', type: 'object', 'required': true },
+            { arg: "options", type: "object", http: "optionsFromRequest" }
+        ],
         http: { path: '/draft', verb: 'post' },
         returns: { arg: 'result', type: 'Order' }
     });
 
     Order.remoteMethod('updateDraft', {
-        accepts: { arg: 'data', type: 'object', 'required': true },
+        // accepts: { arg: 'data', type: 'object', 'required': true },
+        accepts: [
+            { arg: 'data', type: 'object', 'required': true },
+            { arg: "options", type: "object", http: "optionsFromRequest" }
+        ],
         http: { path: '/draft', verb: 'put' },
         returns: { arg: 'result', type: 'Order' }
     });
@@ -118,7 +126,7 @@ module.exports = function (Order) {
     Order.get3PLToken = get3PLToken;
     Order.getWalletBalance = getWalletBalance;
 
-    function createDraft(data, cb) {
+    function createDraft(data, options, cb) {
         var promises = [];
         return populateData(Order, data)
             .then(order => {
@@ -144,7 +152,7 @@ module.exports = function (Order) {
             });
     }
 
-    function updateDraft(data, cb) {
+    function updateDraft(data, options, cb) {
         var promises = [];
 
         return populateData(Order, data, true)
@@ -401,6 +409,44 @@ module.exports = function (Order) {
             });
     }
 
+    function getRefundAmount(order) {
+        let rejectedAmount = order.OrderDetails()
+            .reduce((a, b) => {
+                return a + (b.Status == 'REJECTED' || b.Status == 'REFUNDED' ? b.Price : 0);
+            }, 0);
+
+        let reducedShippingFee = 0;
+
+        if (order.TotalShippingFee > 0) {
+            let usedShippingFee = 0;
+
+            let dealerCodes = Array.from(new Set(order.OrderDetails.map(t => t.DealerCode)));
+
+            dealerCodes.forEach(dealerCode => {
+                // totalweight
+                let dealerTotalWeight = order.OrderDetails
+                    .reduce((a, b) => {
+                        return a + b.Weight;
+                    }, 0);
+
+                let dealerTotalShippingFee = weightRounding(dealerTotalWeight) * order.OrderDetails[0].ShippingFee;
+
+                // totalusedweight
+                let dealerUsedTotalWeight = order.OrderDetails
+                    .filter(t => t.Status != 'REJECTED' && t.Status != 'REFUNDED')
+                    .reduce((a, b) => {
+                        return a + b.Weight;
+                    }, 0);
+
+                let dealerUsedTotalShippingFee = weightRounding(dealerUsedTotalWeight) * order.OrderDetails[0].ShippingFee;
+
+                reducedShippingFee += dealerTotalShippingFee - dealerUsedTotalShippingFee;
+            });
+        }
+
+        return rejectedAmount + reducedShippingFee;
+    }
+
     function completeOrder(code, cb) {
         return getOrderWithDetails(Order, code)
             .then(order => {
@@ -413,11 +459,11 @@ module.exports = function (Order) {
                 var promises = [];
                 var currentDate = new Date();
 
-                var refundAmount = 0;
-                var refundPayment = order.OrderPayments().find(t => t.PaymentType == 'REFUNDMENT');
+                // var refundAmount = 0;
+                // var refundPayment = order.OrderPayments().find(t => t.PaymentType == 'REFUNDMENT');
 
-                if (refundPayment)
-                    refundAmount = Math.abs(refundPayment.PaidAmount);
+                // if (refundPayment)
+                //     refundAmount = Math.abs(refundPayment.PaidAmount);
 
                 // // check any rejected
                 // if (order.IsFullyPaid && order.Status == 'REJECTED') {
@@ -439,9 +485,13 @@ module.exports = function (Order) {
                 //     }
                 // }
 
-                if (refundAmount > 0) {
+                // if (refundAmount > 0) {
+                //     promises.push(refundWallet(order.InChargeEmail, refundAmount));
+                // }
+
+                var refundAmount = getRefundAmount(order);
+                if (refundAmount > 0)
                     promises.push(refundWallet(order.InChargeEmail, refundAmount));
-                }
 
                 promises.push(order.updateAttribute('Status', order.Status == 'REJECTED' ? 'REFUNDED' : 'COMPLETED'));
 
@@ -1014,5 +1064,5 @@ module.exports = function (Order) {
             });
     }
     //endregion
-
+    
 };
