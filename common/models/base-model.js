@@ -57,24 +57,4 @@ module.exports = function (BaseModel) {
 
         throw error;
     }
-
-    // BaseModel.observe('access', function (ctx, next) {
-    //     const token = ctx.options && ctx.options.accessToken;
-    //     const userId = token && token.userId;
-    //     const user = userId ? 'user#' + userId : '<anonymous>';
-
-    //     const modelName = ctx.Model.modelName;
-    //     const scope = ctx.where ? JSON.stringify(ctx.where) : '<all records>';
-    //     console.log('%s: %s accessed %s:%s', new Date(), user, modelName, scope);
-    //     next();
-    // });
-
-    // BaseModel.beforeRemote('saveOptions', function (ctx, unused, next) {
-    //     if (!ctx.args.options.accessToken) return next();
-    //     User.findById(ctx.args.options.accessToken.userId, function (err, user) {
-    //         if (err) return next(err);
-    //         ctx.args.options.currentUser = user;
-    //         next();
-    //     });
-    // })
 };

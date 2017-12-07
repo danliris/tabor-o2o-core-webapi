@@ -11,6 +11,7 @@
     "posttest": "npm run lint && nsp check"
   },
   "dependencies": {
+    "cls-hooked": "^4.2.2",
     "combined-stream": "^1.0.5",
     "compression": "^1.0.3",
     "cors": "^2.5.2",
@@ -22,6 +23,7 @@
     "loopback-component-explorer": "^4.0.0",
     "loopback-component-storage": "^3.0.0",
     "loopback-connector-mssql": "^2.9.0",
+    "loopback-context": "^3.3.0",
     "merge-descriptors": "^1.0.1",
     "node-fetch": "^1.7.3",
     "nodemailer": "^4.1.3",
