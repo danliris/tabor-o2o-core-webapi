@@ -1,3 +1,5 @@
+var LoopBackContext = require('loopback-context');
+
 module.exports = function (Model, options) {
 
   Model.defineProperty('Active', { type: Boolean, default: true });
@@ -9,10 +11,11 @@ module.exports = function (Model, options) {
   Model.defineProperty('UpdatedBy', { type: String, default: '' });
   Model.defineProperty('UpdateAgent', { type: String, default: '' });
 
-  Model.observe('before save', function event(context, next) {
-    var accessToken = context.options.accessToken;
-    var actor = accessToken && accessToken.userId ? accessToken.userId : "#anonymous";
-    // var actor = "#anonymous";
+  Model.observe('before save', function (context, next) {
+    var ctx = LoopBackContext.getCurrentContext();
+    var currentUser = ctx && ctx.get('currentUser');
+
+    var actor = currentUser ? currentUser.username : '#anonymous';
 
     var data = context.instance || context.data;
 
@@ -25,5 +28,4 @@ module.exports = function (Model, options) {
     data.UpdatedBy = actor;
     next();
   });
-
 }

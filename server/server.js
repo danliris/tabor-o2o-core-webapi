@@ -3,6 +3,7 @@
 var loopback = require('loopback');
 var boot = require('loopback-boot');
 var path = require("path");
+var LoopBackContext = require('loopback-context');
 
 var app = module.exports = loopback();
 app.loopback.User.settings.acls = require('./user-acls.json');
@@ -16,11 +17,32 @@ app.loopback.User.settings.acls = require('./user-acls.json');
 // var container = ds.createModel('container');
 // app.model(container);
 
-app.use(loopback.token({
-  headers: ['access_token', 'X-Access-Token'],
-  params: ['access_token']
-  //additional keys (check docs for more info)
-}));
+// app.use(loopback.token({
+//   headers: ['access_token', 'X-Access-Token'],
+//   params: ['access_token']
+//   //additional keys (check docs for more info)
+// }));
+
+app.use(LoopBackContext.perRequest());
+app.use(loopback.token());
+app.use(function setCurrentUser(req, res, next) {
+  if (!req.accessToken) {
+    return next();
+  }
+  app.models.User.findById(req.accessToken.userId, function (err, user) {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      return next(new Error('No user with this access token was found.'));
+    }
+    var loopbackContext = LoopBackContext.getCurrentContext();
+    if (loopbackContext) {
+      loopbackContext.set('currentUser', user);
+    }
+    next();
+  });
+});
 
 app.start = function () {
   // start the web server
