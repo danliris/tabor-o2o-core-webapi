@@ -22,10 +22,14 @@ module.exports = function (Model, options) {
     // if (context.instance) {
     if (context.isNewInstance) {
       data.CreatedDate = Date.now();
+      data.CreateAgent = '';
       data.CreatedBy = actor;
     }
+
     data.UpdatedDate = Date.now();
+    data.UpdateAgent = '';
     data.UpdatedBy = actor;
+    
     next();
   });
 }
