@@ -420,25 +420,25 @@ module.exports = function (Order) {
         if (order.TotalShippingFee > 0) {
             let usedShippingFee = 0;
 
-            let dealerCodes = Array.from(new Set(order.OrderDetails.map(t => t.DealerCode)));
+            let dealerCodes = Array.from(new Set(order.OrderDetails().map(t => t.DealerCode)));
 
             dealerCodes.forEach(dealerCode => {
                 // totalweight
-                let dealerTotalWeight = order.OrderDetails
+                let dealerTotalWeight = order.OrderDetails()
                     .reduce((a, b) => {
                         return a + b.Weight;
                     }, 0);
 
-                let dealerTotalShippingFee = weightRounding(dealerTotalWeight) * order.OrderDetails[0].ShippingFee;
+                let dealerTotalShippingFee = weightRounding(dealerTotalWeight) * order.OrderDetails()[0].ShippingFee;
 
                 // totalusedweight
-                let dealerUsedTotalWeight = order.OrderDetails
+                let dealerUsedTotalWeight = order.OrderDetails()
                     .filter(t => t.Status != 'REJECTED' && t.Status != 'REFUNDED')
                     .reduce((a, b) => {
                         return a + b.Weight;
                     }, 0);
 
-                let dealerUsedTotalShippingFee = weightRounding(dealerUsedTotalWeight) * order.OrderDetails[0].ShippingFee;
+                let dealerUsedTotalShippingFee = weightRounding(dealerUsedTotalWeight) * order.OrderDetails()[0].ShippingFee;
 
                 reducedShippingFee += dealerTotalShippingFee - dealerUsedTotalShippingFee;
             });
@@ -458,36 +458,6 @@ module.exports = function (Order) {
 
                 var promises = [];
                 var currentDate = new Date();
-
-                // var refundAmount = 0;
-                // var refundPayment = order.OrderPayments().find(t => t.PaymentType == 'REFUNDMENT');
-
-                // if (refundPayment)
-                //     refundAmount = Math.abs(refundPayment.PaidAmount);
-
-                // // check any rejected
-                // if (order.IsFullyPaid && order.Status == 'REJECTED') {
-                //     refundAmount = order.OrderDetails().reduce((a, b) => {
-                //         return a + ((b.Status == 'REJECTED' || b.Status == 'REFUNDED') ? b.Price : 0);
-                //     }, 0);
-
-                //     if (refundAmount > 0) {
-                //         refundAmount += order.TotalShippingFee;
-
-                //         promises.push(order.OrderPayments.create({
-                //             TransactionDate: currentDate,
-                //             PaymentMethod: 'CASH',
-                //             PaymentType: 'REFUNDMENT',
-                //             Amount: refundAmount,
-                //             PaidAmount: refundAmount,
-                //             Remark: 'Barang tidak tersedia'
-                //         }));
-                //     }
-                // }
-
-                // if (refundAmount > 0) {
-                //     promises.push(refundWallet(order.InChargeEmail, refundAmount));
-                // }
 
                 var refundAmount = getRefundAmount(order);
                 if (refundAmount > 0)
@@ -550,9 +520,10 @@ module.exports = function (Order) {
             return a + b.PaidAmount;
         }, 0);
 
-        var refundValue = order.OrderDetails().reduce((a, b) => {
-            return a + (b.Status == 'REJECTED' ? b.Price : 0);
-        }, 0);
+        // var refundValue = order.OrderDetails().reduce((a, b) => {
+        //     return a + (b.Status == 'REJECTED' ? b.Price : 0);
+        // }, 0);
+        var refundValue = getRefundAmount(order);
 
         var totalShouldBePaid = order.TotalPrice + order.TotalShippingFee - refundValue;
         // lunas?
@@ -1064,5 +1035,16 @@ module.exports = function (Order) {
             });
     }
     //endregion
-    
+    function weightRounding(weight) {
+        if (weight == 0)
+            weight = 0;
+        else if (weight < 1)
+            weight = 1;
+        else if (weight - Math.floor(weight) > 0.3)
+            weight = Math.ceil(weight);
+        else
+            weight = Math.floor(weight);
+
+        return weight;
+    }
 };
