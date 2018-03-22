@@ -10,5 +10,12 @@ module.exports = {
     },
     connectionTimeout: 300 * 60 * 1000,
     requestTimeout: 60 * 60 * 1000
+  },
+  storage:{
+    "name": "storage",
+    "connector": "loopback-component-storage",
+    "provider": "azure",
+    "storageAccount": process.env.STORAGE_ACCOUNT,
+    "storageAccessKey": process.env.STORAGE_ACCESS_KEY
   }
 };

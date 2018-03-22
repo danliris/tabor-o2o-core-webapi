@@ -110,6 +110,23 @@ module.exports = function (Order) {
         returns: { arg: 'result', type: 'object' }
     });
 
+    Order.remoteMethod('rejectOrder', {
+        accepts: { arg: 'data', type: 'object', 'required': true },
+        http: { path: '/reject', verb: 'post' },
+        returns: { arg: 'result', type: 'Order' }
+    });
+
+    Order.remoteMethod('submitOrderDetailIMEI', {
+        accepts: [
+            { arg: 'id', type: 'string', required: true },
+            { arg: 'detailId', type: 'string', required: true },
+            { arg: 'imei', type: 'string', required: true },
+        ],
+        // accepts: { arg: 'data', type: 'object', 'required': true },
+        http: { path: '/:id/OrderDetails/:detailId/imei', verb: 'post' },
+        returns: { arg: 'result', type: 'Order' }
+    });
+
     Order.createDraft = createDraft;
     Order.updateDraft = updateDraft;
     Order.payment = payment;
@@ -125,6 +142,8 @@ module.exports = function (Order) {
     Order.updatestatusBy3PL = updatestatusBy3PL;
     Order.get3PLToken = get3PLToken;
     Order.getWalletBalance = getWalletBalance;
+    Order.rejectOrder = rejectOrder;
+    Order.submitOrderDetailIMEI = submitOrderDetailIMEI;
 
     function createDraft(data, options, cb) {
         var promises = [];
@@ -243,7 +262,7 @@ module.exports = function (Order) {
                                     var promises = [];
                                     promises.push(updatePaymentStatus(order));
 
-                                    promises.push(updateProductStock(Order, order));
+                                    promises.push(updateProductStock(Order, order, true));
 
                                     promises.push(addWalletDebitTransaction(order.InChargeEmail, order.TotalPrice + order.TotalShippingFee));
 
@@ -488,7 +507,7 @@ module.exports = function (Order) {
             });
     }
 
-    function updateProductStock(Order, order) {
+    function updateProductStock(Order, order, isSubstract = true) {
         var promises = [];
         for (var i = 0, length = order.OrderDetails().length; i < length; i++) {
             var detail = order.OrderDetails()[i];
@@ -509,7 +528,10 @@ module.exports = function (Order) {
                         .find(t => t.ProductCode == productDealer.ProductCode
                             && t.DealerCode == productDealer.DealerCode);
 
-                    productDealer.Quantity -= detail.Quantity;
+                    if (isSubstract)
+                        productDealer.Quantity -= detail.Quantity;
+                    else
+                        productDealer.Quantity += detail.Quantity;
                     productDealer.save();
                 });
             });
@@ -792,6 +814,111 @@ module.exports = function (Order) {
                 }
 
                 return data;
+            });
+    }
+
+    function submitOrderDetailIMEI(id, detailId, imei, cb) {
+        // data ini isinya IMEI
+        return getOrderWithDetails(Order, id)
+            .then(order => {
+                if (order == null)
+                    return base.errorResult('Not Found');
+
+                if (order.Status != 'REQUESTED')
+                    return base.errorResult(`Invalid Status: ${order.Status}`);
+
+                // update orderdetail
+                var orderDetail = order.OrderDetails().find(x => x.Code == detailId);
+
+                if (orderDetail.Status != 'REQUESTED')
+                    return base.errorResult(`Invalid Detail Status: ${orderDetail.Status}`);
+
+                var promises = [];
+                promises.push(
+                    orderDetail.OrderDetailIMEIs.create({
+                        OrderDetailCode: orderDetail.Code,
+                        IMEI: imei
+                    })
+                );
+
+                promises.push(
+                    updateOrderDetailStatus(orderDetail, 'SUBMITTED')
+                );
+
+                return Promise.all(promises);
+            })
+            .then(responses => {
+                return getOrderWithDetails(Order, responses[1].OrderCode);
+            })
+            // .then(orderDetail => {
+            //     return getOrderWithDetails(Order, orderDetail.OrderCode);
+            // })
+            .then(order => {
+                var totalDetail = order.OrderDetails().length;
+                var totalClosed = 0;
+
+                for (var i = 0; i < totalDetail; i++) {
+                    if (order.OrderDetails()[i].Status == 'SUBMITTED'
+                        || order.OrderDetails()[i].Status == 'REJECTED'
+                        || order.OrderDetails()[i].Status == 'VOIDED')
+                        totalClosed++;
+                }
+
+                // var status = (totalClosed < totalDetail) ? 'PARTIALLY ARRIVED' : 'SUBMITTED';
+                var status = (totalClosed < totalDetail) ? status : 'SUBMITTED';
+
+                return order.updateAttribute('Status', status);
+            })
+            .then(response => {
+                return response;
+            });
+    }
+
+    function rejectOrder(data, cb) {
+        // data contains: orderCode, reason, dealerCode
+
+        // GET ORDER
+        return getOrderWithDetails(Order, data.orderCode)
+            .then(order => {
+                if (order == null)
+                    return base.errorResult('Not found');
+
+                // CEK STATUS MESTI REQUESTED
+                if (order.Status != 'REQUESTED')
+                    return base.errorResult(`Invalid Status: ${order.Status}`);
+
+                // CEK INI BARANG DIA BUKAANN (Sekarang cuekkin dulu karena dia bisa reject in barang orang lain)
+
+                let status = 'REJECTED';
+                var promises = [];
+                var currentDate = new Date();
+
+                // UPDATE HEADER
+                promises.push(order.updateAttribute('Status', status));
+
+                order.OrderDetails()
+                    .filter(t => t.Status != 'VOIDED')
+                    .forEach(detail => {
+                        // UPDATE DETAILS
+                        promises.push(detail.updateAttribute('Status', status));
+
+                        // ADD TRACK REJECTED
+                        promises.push(detail.OrderTracks.create({
+                            OrderCode: detail.OrderCode,
+                            OrderDetailCode: detail.Code,
+                            TrackDate: currentDate,
+                            Status: status,
+                            Remark: data.reason
+                        }));
+
+                        // UPDATE STOCKS
+                        promises.push(updateProductStock(Order, order, false));
+                    });
+
+                return Promise.all(promises)
+                    .then(res => {
+                        return res[0];
+                    });
             });
     }
 
